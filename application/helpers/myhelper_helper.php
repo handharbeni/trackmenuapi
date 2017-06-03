@@ -16,11 +16,11 @@ if ( ! function_exists('generate_string'))
 	function generate_string($length) {
 	    $possible = "0123456789abcdfghjkmnpqrstvwxyzABCDEFGHIJKLMNOPQRESTUVWXYZ"; // allowed chars in the password
 	     if ($length == "" OR !is_numeric($length)){
-	      $length = 8; 
+	      $length = 8;
 	     }
 
 	     $i = 0; 
-	     $password = "";    
+	     $password = ""; 
 	     while ($i < $length) { 
 	      $char = substr($possible, rand(0, strlen($possible)-1), 1);
 	      if (!strstr($password, $char)) { 
@@ -74,4 +74,111 @@ if ( ! function_exists('validEmail'))
         }
         return $string;
     }
+}
+
+if ( ! function_exists('authToken'))
+{
+	function authToken($type , $token)
+	{
+		$CI =& get_instance();
+		switch($type)
+		{
+			case 'users':
+				$query = $CI->db
+				->get_where('m_user' , array('key' => $token));
+
+				if ( $query->num_rows() > 0)
+				{
+					$data = array();
+
+					foreach($query->result() as $row)
+					{
+						$data[] = array(
+								'id' => $row->id,
+								'nama' => $row->nama,
+								'email' => $row->email,
+								'token' => $row->key,
+								'tanggal' => $row->tanggal_buat,
+							);
+					}
+
+					return $data[0];	
+				}
+
+				return false;
+			break;
+
+			case 'admin':
+				$query = $CI->db
+				->get_where('m_admin' , array('key' => $token));
+
+				if ( $query->num_rows() > 0)
+				{
+					$data = array();
+
+					foreach($query->result() as $row)
+					{
+						$data[] = array(
+								'id' => $row->id,
+								'nama' => $row->nama,
+								'username' => $row->username,
+								'token' => $row->key,
+								'tanggal' => $row->tanggal,
+							);
+					}
+
+					return $data[0];	
+				}
+
+				return false;
+			break;
+
+			case 'kurir':
+				$query = $CI->db
+				->get_where('m_kurir' , array('key' => $token));
+
+				if ( $query->num_rows() > 0)
+				{
+					$data = array();
+
+					foreach($query->result() as $row)
+					{
+						$data[] = array(
+								'id' => $row->id,
+								'nama' => $row->nama,
+								'username' => $row->username,
+								'token' => $row->key,
+								'tanggal' => $row->tanggal,
+							);
+					}
+
+					return $data[0];	
+				}
+
+				return false;
+			break;
+		}
+	}
+}
+
+if ( ! function_exists('generate_id'))
+{
+	function generate_id()
+	{
+		$CI =& get_instance();
+
+		$count = $CI->db->get('m_order')->num_rows() + 1;
+
+		$isRow = $CI->db->get_where('m_order' , 
+			array('id' => $count))->num_rows();
+
+		if ( $isRow == 0)
+		{
+			return $count;
+		}
+		else
+		{
+			return $count + rand(1,5);
+		}
+	}
 }
