@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jun 04, 2017 at 12:15 PM
+-- Generation Time: Jun 04, 2017 at 12:19 PM
 -- Server version: 5.7.18-0ubuntu0.16.04.1
 -- PHP Version: 7.0.15-0ubuntu0.16.04.4
 
@@ -89,6 +89,8 @@ CREATE TABLE `m_user` (
   `nama` varchar(50) DEFAULT NULL,
   `email` varchar(50) DEFAULT NULL,
   `password` varchar(100) DEFAULT NULL,
+  `alamat` varchar(50) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
   `key` varchar(150) DEFAULT NULL,
   `tanggal_buat` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
