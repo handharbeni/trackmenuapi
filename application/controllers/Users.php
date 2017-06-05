@@ -205,7 +205,8 @@ class Users extends REST_Controller {
 					{
 						$response = array(
 							'return' => true,
-							'message' => 'Berhasil login'
+							'message' => 'Berhasil login',
+							'access_token' => $authLogin->row()->key
 						);
 					}
 					else
@@ -289,7 +290,7 @@ class Users extends REST_Controller {
 								'error_message' => $this->msgNullField
 							);
 					
-						$acceptedMethod = array('new_order' , 'done');
+						$acceptedMethod = array('add_item', 'new_order' , 'done');
 
 						if ( ! $postdata['method'] || ! in_array($postdata['method'] , $acceptedMethod))
 						{
@@ -304,58 +305,74 @@ class Users extends REST_Controller {
 							$user = $authToken;
 							switch( trimLower($postdata['method']))
 							{
-								case 'new_order':
+								case 'add_item' :
 									if ( ! $postdata['id_menu'] || ! $postdata['jumlah'])
 									{
 										$response = $this->isNullField;
 									}
 									else
 									{
+										/* Master Order */
+										$dataMaster = array(
+												'id' => $postdata['id_order'],
+												'status' => 1
+											);
+										$selectMaster = $this->db->get_where('m_order', $dataMaster);
+										if ($selectMaster->num_rows() > 0) {
+											/*data master tersedia*/
+											/* Tabel Menu */	
+											$selectMenu = $this->db->get_where('m_menu' , array(
+													'id' => $postdata['id_menu']
+												))->result()[0];
+											/* Tabel Menu */
+											$dataOrder = array(
+													'id_order' => $postdata['id_order'],
+													'id_menu' => $postdata['id_menu'],
+													'jumlah' => $postdata['jumlah'],
+													'harga' =>	$selectMenu->harga,
+													'total_harga' => $selectMenu->harga * $postdata['jumlah']
+												);											
+											$insertTOrder = $this->db->insert('t_order' , $dataOrder);
+											if ($insertTOrder) {
+												$response = array(
+														'return' => true,
+														'message' => 'Item Order Berhasil Ditambahkan!'
+													);
+											}else{												
+												$response = array(
+														'return' => false,
+														'message' => 'Item Order Gagal Ditambahkan!'
+													);
+											}
+										}else{
+											/*data master tidak ditemukan*/
+											$response = array(
+													'return' => false,
+													'message' => 'Master Order Tidak Ditemukan!'
+												);
+										}
+									}			
+								break;
+								case 'new_order':
 										$generate_id = generate_id();
 										$ternaryId = ( ! $postdata['id_order']) 
 													? $generate_id : $postdata['id_order'];
 										/* Master Order */
 										$dataMaster = array(
-												'id' => $ternaryId,
+												// 'id' => $ternaryId,
 												'id_user' => $user['id'],
 												'id_kurir' => 0,
 												'tanggal_waktu' => date('Y-m-d H:i:s'),
 												'status' => 1
 											);
-
-										$selectMaster = $this->db->get_where('m_order', array(
-												'id' => $ternaryId
-											));
-
-										if ( $selectMaster->num_rows() == 0)
-										{
-											$this->db->insert('m_order' , $dataMaster);
-										}
+										$this->db->insert('m_order' , $dataMaster);
 										/* Master Order */
-
-										/* Tabel Menu */	
-										$selectMenu = $this->db->get_where('m_menu' , array(
-												'id' => $postdata['id_menu']
-											))->result()[0];
-										/* Tabel Menu */
-
-										/* Tabel Order */	
-										$dataOrder = array(
-												'id_order' => $ternaryId,
-												'id_menu' => $postdata['id_menu'],
-												'jumlah' => $postdata['jumlah'],
-												'harga' =>	$selectMenu->harga,
-												'total_harga' => $selectMenu->harga * $postdata['jumlah']
-											); 
-
-										$this->db->insert('t_order' , $dataOrder);
-										/* Tabel Order */
-
+										$selectMaster = $this->db->get_where('m_order', $dataMaster);
 										$response = array(
 												'return' => true,
-												'message' => 'Berhasil input order!'
+												'message' => 'Berhasil input order!',
+												'data'	=> $selectMaster->row()->id
 											);
-									}
 								break;
 
 								case 'done':
