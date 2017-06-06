@@ -2258,4 +2258,31 @@ abstract class REST_Controller extends \CI_Controller {
             exit;
         }
     }
+
+    protected function setErrorMessage()
+    {
+        // $this->msgErrorParameter = "Parameter tidak ditemukan!";
+        // $this->msgErrorToken = "Access token tidak valid!";
+        // $this->msgWrongToken = "Access token salah atau tidak ditemukan!";
+        // $this->msgNullField = "Masih ada parameter yang kosong!";
+        // $this->msgWrongUserPwd = "Username atau password salah!";
+        // $this->msgWrongEmailPwd = "Email atau password salah!";
+        // $this->msgNullUserPwd = "Username atau password tidak ditemukan!";
+        // $this->msgNullEmailPwd = "Email atau password tidak ditemukan!";
+
+        $msgError = array(
+                'ErrorParameter' => "Parameter tidak ditemukan!",
+                'ErrorToken' => "Access token tidak valid!",
+                'WrongToken' => "Access token salah atau tidak ditemukan!",
+                'NullField' => "Masih ada parameter yang kosong!",
+                'WrongUserPwd' => "Username atau password salah!",
+                'WrongEmailPwd' => "Email atau password salah!",
+                'NullUserPwd' => "Username atau password tidak ditemukan!",
+                'NullEmailPwd' => "Email atau password tidak ditemukan!",
+                'EmailExist' => 'Email sudah digunakan!',
+                'WrongMethod' => 'Metode salah atau tidak ditemukan!'
+            );
+
+        return $msgError;
+    }
 }

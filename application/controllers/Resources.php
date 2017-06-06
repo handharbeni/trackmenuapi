@@ -10,14 +10,20 @@ class Resources extends REST_Controller {
 	public function __construct()
 	{
 		parent::__construct();
+		$errorMsg = parent::setErrorMessage();
+		foreach($errorMsg as $key => $value)
+		{
+			$x = "msg".$key;
+			$this->$x = $value;
+		}
 	}
 
 
 	public function index_get()
 	{
 		$response = array(
-				'result' => false,
-				'error_message' => 'Parameter tidak ditemukan'
+				'return' => false,
+				'error_message' => $this->msgErrorParameter
 			);
 
 		return $this->response($response);

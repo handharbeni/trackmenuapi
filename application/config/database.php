@@ -77,7 +77,11 @@ $db['default'] = array(
 	'dsn'	=> '',
 	'hostname' => 'localhost',
 	'username' => 'root',
+<<<<<<< HEAD
 	'password' => '',
+=======
+	'password' => 'beni123',
+>>>>>>> 189c3ffa050088d927e840e2fd87fa53a266f6e3
 	'database' => 'burger_tahu',
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
