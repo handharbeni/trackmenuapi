@@ -99,6 +99,8 @@ if ( ! function_exists('authToken'))
 								'email' => $row->email,
 								'token' => $row->key,
 								'tanggal' => $row->tanggal_buat,
+								'alamat' => $row->alamat,
+								'location' => $row->location
 							);
 					}
 
