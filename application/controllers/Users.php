@@ -268,6 +268,52 @@ class Users extends REST_Controller {
 				}
 			break;
 
+			case 'profile':
+				if ( ! $token)
+				{
+					$response = array(
+							'return' => true,
+							'error_message' => $this->msgErrorToken
+						);
+				}
+				else
+				{
+					$user = $authToken;
+					if ( $authToken)
+					{
+						$postdata = array(
+								'nama' => $this->post('nama'),
+								'lokasi' => $this->post('lokasi'),
+								'alamat' => $this->post('alamat') 
+							);
+
+						$data = array(
+								'nama' => ( ! $postdata['nama']) ? $user['nama'] : $postdata['nama'],
+								'location' => ( ! $postdata['lokasi']) ? $user['location'] : $postdata['lokasi'],
+								'alamat' => ( ! $postdata['alamat']) ? $user['alamat'] : $postdata['alamat']
+							);
+
+						$this->db->set($data);
+						$this->db->where( array(
+								'id' => $user['id']
+							));
+						$this->db->update('m_user' , $data);
+
+						$response = array(
+								'return' => true,
+								'message' => 'Data berhasil diubah!'
+							);
+					}
+					else
+					{
+						$response = array(
+								'return' => false,
+								'error_message' => $this->msgWrongToken
+							);
+					}
+				}
+			break;
+
 			case 'order':
 				if ( ! $token )
 				{
@@ -355,6 +401,7 @@ class Users extends REST_Controller {
 										}
 									}			
 								break;
+
 								case 'new_order':
 										$generate_id = generate_id();
 										$ternaryId = ( ! $postdata['id_order']) 

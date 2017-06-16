@@ -14,12 +14,18 @@
 ### GET Location Kurir [OK]
 /users/tracking?kurir_id={id_kurir}&token={access_token}
 
-### POST Order [OK]
+### POST Add Item [OK]
 => token
-=> method (new_order)
+=> method (add_item)
 => id_order (optional)
 => id_menu
 => jumlah
+/users/order
+
+### POST Add Order [OK]
+=> token
+=> method (new_order)
+=> id_order (optional)
 /users/order
 
 ### POST Login [OK]
@@ -33,13 +39,17 @@
 => password
 /users/daftar
 
-### POST Location (set location)
-
 ### POST Order Done [OK]
 => token
 => method (done)
 => id_order
 /users/order
+
+### POST Profile [OK]
+=> token
+=> nama
+=> lokasi
+=> alamat
 
 ## [Kurir]
 
