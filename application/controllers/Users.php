@@ -20,10 +20,10 @@ class Users extends REST_Controller {
 		$this->status = array(
 			1 => 'New Order',
 			2 => 'Available order on admin',
-			3 => 'Accepted by kurir',
-			4 => 'Pengiriman selesai',
-			5 => 'Order selesai',
-			6 => 'Canceled by admin or user'
+			3 => 'Send to courier',
+			4 => 'Accepted by kurir',
+			5 => 'Order active',
+			6 => 'Order done'
 		);
 	}
 
@@ -433,14 +433,25 @@ class Users extends REST_Controller {
 												'status' => 5
 											);
 
-										$this->db->set($data);
-										$this->db->where( 
-											array('id' => $postdata['id_order'], 'id_user' => $user['id']));
-										$this->db->update('m_order');
+										$checknum = $this->db->get_where('m_order' , array(
+												'id' => $postdata['id_order']
+											));
+
+										$num = $checknum->num_rows();
+
+										if ( $num > 0)
+										{
+											$this->db->set($data);
+											$this->db->where( 
+												array('id' => $postdata['id_order'], 'id_user' => $user['id']));
+											$this->db->update('m_order');
+										}
 
 										$response = array(
-												'return' => true,
-												'message' => 'Status order berhasil diubah!'
+												'return' => ($num > 0) ? true : false,
+												($num > 0) ? 'message' : 'error_message' => 
+												($num > 0) ? 'Status order berhasil diubah!'
+												: 'ID Order tidak ditemukan!'
 											);
 									}
 								break;
