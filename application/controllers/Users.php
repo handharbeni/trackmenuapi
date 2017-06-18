@@ -206,6 +206,8 @@ class Users extends REST_Controller {
 						$response = array(
 							'return' => true,
 							'message' => 'Berhasil login',
+							'nama' => $authLogin->row()->nama,
+							'email' => $authLogin->row()->email,
 							'access_token' => $authLogin->row()->key
 						);
 					}
