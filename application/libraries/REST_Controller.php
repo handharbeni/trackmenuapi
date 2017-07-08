@@ -2280,6 +2280,7 @@ abstract class REST_Controller extends \CI_Controller {
                 'NullUserPwd' => "Username atau password tidak ditemukan!",
                 'NullEmailPwd' => "Email atau password tidak ditemukan!",
                 'EmailExist' => 'Email sudah digunakan!',
+                'UsernameExist' => 'Username sudah digunakan!',
                 'WrongMethod' => 'Metode salah atau tidak ditemukan!'
             );
 

@@ -19,11 +19,11 @@ class Users extends REST_Controller {
 
 		$this->status = array(
 			1 => 'New Order',
-			2 => 'Available order on admin',
-			3 => 'Accepted by kurir',
-			4 => 'Pengiriman selesai',
-			5 => 'Order selesai',
-			6 => 'Canceled by admin or user'
+			2 => 'available order on admin',
+			3 => 'Send to courier',
+			4 => 'Accepted by kurir',
+			5 => 'Order Active',
+			6 => 'Order done'
 		);
 	}
 
@@ -52,46 +52,111 @@ class Users extends REST_Controller {
 						
 						case 'order':
 							$dataUser = $authToken;
-							// $dataUser['nama']
-							$sql = "SELECT t_order.* , m_order.* FROM t_order, m_order";
-							$sql.= " WHERE m_order.id_user = ".$dataUser['id'];
-							$sql.= " AND m_order.id = t_order.id_order AND status = 3";
-							$queryOrder = $this->db->query($sql);
+							$this->option = trimLower($this->get('option'));
 
-							$dataOrder = array();
-
-							foreach($queryOrder->result() as $row)
+							if ( ! $this->option)
 							{
-								$menu = $this->db->get_where('m_menu' , 
-									array('id' => $row->id_menu))
-								->result();
-
-								$kurir = $this->db->get_where('m_kurir' ,
-									array('id' => $row->id_kurir))
-								->result()[0];
-
-								$x = explode(" " , $row->tanggal_waktu);
-
-								$dataOrder[] = array(
-										'id' => $row->id,
-										'id_order' => $row->id_order,
-										'id_user' => $dataUser['id'],
-										'id_kurir' => $kurir->id,
-										'nama_user' => $dataUser['nama'],
-										'email' => $dataUser['email'],
-										'nama_kurir' => $kurir->nama,
-										'total_harga' => $row->total_harga,
-										'tanggal' => $x[0],
-										'jam' => $x[1],
-										'status' => array('key' => $row->status , 'value' => $this->status[$row->status]),
-										'items' => $menu,
+								$response = array(
+										'return' => false,
+										'error_message' => $this->msgErrorParameter
 									);
 							}
+							else
+							{
+								switch( $this->option)
+								{
+									case 'all':
+										$sql = "SELECT t_order.* , m_order.* FROM t_order, m_order";
+										$sql.= " WHERE m_order.id_user = ".$dataUser['id'];
+										$sql.= " AND m_order.id = t_order.id_order ORDER BY tanggal_waktu DESC";
+										$queryOrder = $this->db->query($sql);
 
-							$response = array(
-									'return' => true,
-									'data' => $dataOrder
-								);
+										$dataOrder = array();
+
+										foreach($queryOrder->result() as $row)
+										{
+											$menu = $this->db->get_where('m_menu' , 
+												array('id' => $row->id_menu))
+											->result();
+
+											$kurir = $this->db->get_where('m_kurir' ,
+												array('id' => $row->id_kurir))
+											->result()[0];
+
+											$x = explode(" " , $row->tanggal_waktu);
+
+											$dataOrder[] = array(
+													'id' => $row->id,
+													'id_order' => $row->id_order,
+													'id_user' => $dataUser['id'],
+													'id_kurir' => $kurir->id,
+													'nama_user' => $dataUser['nama'],
+													'email' => $dataUser['email'],
+													'nama_kurir' => $kurir->nama,
+													'total_harga' => $row->total_harga,
+													'tanggal' => $x[0],
+													'jam' => $x[1],
+													'status' => array('key' => $row->status , 'value' => $this->status[$row->status]),
+													'items' => $menu,
+												);
+										}
+
+										$response = array(
+												'return' => true,
+												'data' => $dataOrder
+											);
+									break;
+
+									case 'active':
+										$sql = "SELECT t_order.* , m_order.* FROM t_order, m_order";
+										$sql.= " WHERE m_order.id_user = ".$dataUser['id'];
+										$sql.= " AND m_order.id = t_order.id_order AND status = 5";
+										$queryOrder = $this->db->query($sql);
+
+										$dataOrder = array();
+
+										foreach($queryOrder->result() as $row)
+										{
+											$menu = $this->db->get_where('m_menu' , 
+												array('id' => $row->id_menu))
+											->result();
+
+											$kurir = $this->db->get_where('m_kurir' ,
+												array('id' => $row->id_kurir))
+											->result()[0];
+
+											$x = explode(" " , $row->tanggal_waktu);
+
+											$dataOrder[] = array(
+													'id' => $row->id,
+													'id_order' => $row->id_order,
+													'id_user' => $dataUser['id'],
+													'id_kurir' => $kurir->id,
+													'nama_user' => $dataUser['nama'],
+													'email' => $dataUser['email'],
+													'nama_kurir' => $kurir->nama,
+													'total_harga' => $row->total_harga,
+													'tanggal' => $x[0],
+													'jam' => $x[1],
+													'status' => array('key' => $row->status , 'value' => $this->status[$row->status]),
+													'items' => $menu,
+												);
+										}
+
+										$response = array(
+												'return' => true,
+												'data' => $dataOrder
+											);
+									break;
+
+									default:
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgErrorParameter
+											);
+									break;
+								}
+							}
 						break;
 
 						case 'tracking':
@@ -330,7 +395,10 @@ class Users extends REST_Controller {
 							'method' => $this->post('method'),
 							'id_order' => $this->post('id_order'),
 							'id_menu' => $this->post('id_menu'),
-							'jumlah' => $this->post('jumlah')
+							'jumlah' => $this->post('jumlah'),
+							'alamat' => $this->post('alamat'),
+							'latitude' => $this->post('latitude'),
+							'longitude' => $this->post('longitude')
 						);
 
 						$this->isNullField = array(
@@ -367,7 +435,6 @@ class Users extends REST_Controller {
 											);
 										$selectMaster = $this->db->get_where('m_order', $dataMaster);
 										if ($selectMaster->num_rows() > 0) {
-											/*data master tersedia*/
 											/* Tabel Menu */	
 											$selectMenu = $this->db->get_where('m_menu' , array(
 													'id' => $postdata['id_menu']
@@ -406,22 +473,33 @@ class Users extends REST_Controller {
 										$generate_id = generate_id();
 										$ternaryId = ( ! $postdata['id_order']) 
 													? $generate_id : $postdata['id_order'];
-										/* Master Order */
-										$dataMaster = array(
-												// 'id' => $ternaryId,
-												'id_user' => $user['id'],
-												'id_kurir' => 0,
-												'tanggal_waktu' => date('Y-m-d H:i:s'),
-												'status' => 1
-											);
-										$this->db->insert('m_order' , $dataMaster);
-										/* Master Order */
-										$selectMaster = $this->db->get_where('m_order', $dataMaster);
-										$response = array(
-												'return' => true,
-												'message' => 'Berhasil input order!',
-												'data'	=> $selectMaster->row()->id
-											);
+
+										if ( ! $postdata['alamat'] || ! $postdata['latitude'] || ! $postdata['longitude'])
+										{
+											$response = $this->isNullField;
+										}
+										else
+										{
+											/* Master Order */
+											$dataMaster = array(
+													// 'id' => $ternaryId,
+													'id_user' => $user['id'],
+													'id_kurir' => 0,
+													'alamat' => $postdata['alamat'],
+													'latitude' => $postdata['latitude'],
+													'longitude' => $postdata['longitude'],
+													'tanggal_waktu' => date('Y-m-d H:i:s'),
+													'status' => 1
+												);
+											$this->db->insert('m_order' , $dataMaster);
+											/* Master Order */
+											$selectMaster = $this->db->get_where('m_order', $dataMaster);
+											$response = array(
+													'return' => true,
+													'message' => 'Berhasil input order!',
+													'data'	=> $selectMaster->row()->id
+												);
+										}
 								break;
 
 								case 'done':
@@ -435,14 +513,25 @@ class Users extends REST_Controller {
 												'status' => 5
 											);
 
-										$this->db->set($data);
-										$this->db->where( 
-											array('id' => $postdata['id_order'], 'id_user' => $user['id']));
-										$this->db->update('m_order');
+										$checknum = $this->db->get_where('m_order' , array(
+												'id' => $postdata['id_order']
+											));
+
+										$num = $checknum->num_rows();
+
+										if ( $num > 0)
+										{
+											$this->db->set($data);
+											$this->db->where( 
+												array('id' => $postdata['id_order'], 'id_user' => $user['id']));
+											$this->db->update('m_order');
+										}
 
 										$response = array(
-												'return' => true,
-												'message' => 'Status order berhasil diubah!'
+												'return' => ($num > 0) ? true : false,
+												($num > 0) ? 'message' : 'error_message' => 
+												($num > 0) ? 'Status order berhasil diubah!'
+												: 'ID Order tidak ditemukan!'
 											);
 									}
 								break;

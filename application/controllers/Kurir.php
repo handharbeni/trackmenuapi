@@ -42,6 +42,53 @@ class Kurir extends REST_Controller {
 								);
 						break;
 
+						case 'order':
+							$this->status = $this->get('status');
+
+							if ( ! $this->status)
+							{
+								$response = array(
+										'return' => false,
+										'error_message' => $this->msgErrorParameter
+									);
+							}
+							else
+							{
+								$kurir = $authToken;
+								switch( trimLower($this->status))
+								{
+									case 'self':
+										$myorder = $this->db->get_where('m_order' , array(
+													'id_kurir' => $kurir['id'],
+													'status' => 3
+												));
+
+										$result = $myorder->result();
+										$num = $myorder->num_rows();
+
+										$response = array(
+												'return' => ($num != 0) ? true : false,
+												($num != 0) ? 'data' : 'error_message' => 
+												($num != 0) ? $result : 'Tidak ada orderan yang aktif!'
+											);
+									break;
+
+									case 'tersedia':
+										$response = array(
+												'return' => true
+											);
+									break;
+
+									default:
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgWrongMethod
+											);
+									break;
+								}
+							}
+						break;
+
 						default:
 							$response = array(
 									'return' => false,
@@ -116,6 +163,73 @@ class Kurir extends REST_Controller {
 							'return' => false,
 							'error_message' => $this->msgWrongUserPwd
 						);
+					}
+				}
+			break;
+
+			case 'order':
+				if ( ! $token)
+				{
+					$response = array(
+							'return' => false,
+							'error_message' => $this->msgErrorToken
+						);
+				}
+				else
+				{
+					if ( ! $authToken)
+					{
+						$response = array(
+								'return' => false,
+								'error_message' => $this->msgWrongToken
+							);
+					}
+					else
+					{
+						$kurir = $authToken;
+						if ( ! $this->post('id_order'))
+						{
+							$response = array(
+									'return' => false,
+									'error_message' => $this->msgNullField
+								);
+						}
+						else
+						{
+							$allorder = $this->db
+							->where( array('id' => $this->post('id_order')))
+							->get('m_order');
+
+							if ( $allorder->num_rows() == 0)
+							{
+								$response = array(
+										'return' => false,
+										'error_message' => 'Data order tidak ditemukan!'
+									);
+							}
+							else
+							{
+								$data = array(
+										'id_kurir' => $kurir['id'],
+										'status' => 3
+									);
+
+								$this->db->set($data);
+								$this->db->where( array('id' => $this->post('id_order')));
+								$this->db->update('m_order');
+
+								$myorder = $this->db->get_where('m_order' , array(
+										'id_kurir' => $kurir['id'],
+										'status' => 3
+									))->result();
+
+								$response = array(
+										'return' => true,
+										'message' => 'Berhasil mengambil orderan!',
+										'orders' => $myorder
+									);
+							}
+						}
 					}
 				}
 			break;
