@@ -16,6 +16,15 @@ class Kurir extends REST_Controller {
 			$x = "msg".$key;
 			$this->$x = $value;
 		}
+
+		$this->status = array(
+			1 => 'New Order',
+			2 => 'available order on admin',
+			3 => 'Send to courier',
+			4 => 'Accepted by kurir',
+			5 => 'Order Active',
+			6 => 'Order done'
+		);
 	}
 
 	public function index_get($action = '')
@@ -73,9 +82,18 @@ class Kurir extends REST_Controller {
 											);
 									break;
 
-									case 'tersedia':
+									case 'all':
+										$myorder = $this->db->get_where('m_order' , array(
+													'id_kurir' => $kurir['id'],
+												));
+
+										$result = $myorder->result();
+										$num = $myorder->num_rows();
+
 										$response = array(
-												'return' => true
+												'return' => ($num != 0) ? true : false,
+												($num != 0) ? 'data' : 'error_message' => 
+												($num != 0) ? $result : 'Orderan masih kosong!'
 											);
 									break;
 

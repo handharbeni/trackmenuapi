@@ -398,7 +398,9 @@ class Users extends REST_Controller {
 							'jumlah' => $this->post('jumlah'),
 							'alamat' => $this->post('alamat'),
 							'latitude' => $this->post('latitude'),
-							'longitude' => $this->post('longitude')
+							'longitude' => $this->post('longitude'),
+							'kilometer' => $this->post('km'),
+							'keterangan' => $this->post('keterangan')
 						);
 
 						$this->isNullField = array(
@@ -445,7 +447,8 @@ class Users extends REST_Controller {
 													'id_menu' => $postdata['id_menu'],
 													'jumlah' => $postdata['jumlah'],
 													'harga' =>	$selectMenu->harga,
-													'total_harga' => $selectMenu->harga * $postdata['jumlah']
+													'total_harga' => $selectMenu->harga * $postdata['jumlah'],
+													'keterangan' => ( $postdata['keterangan']) ? trim($postdata['keterangan']) : 'nothing'
 												);											
 											$insertTOrder = $this->db->insert('t_order' , $dataOrder);
 											if ($insertTOrder) {
@@ -474,12 +477,24 @@ class Users extends REST_Controller {
 										$ternaryId = ( ! $postdata['id_order']) 
 													? $generate_id : $postdata['id_order'];
 
-										if ( ! $postdata['alamat'] || ! $postdata['latitude'] || ! $postdata['longitude'])
+										if ( ! $postdata['alamat'] || ! $postdata['kilometer'] || ! $postdata['latitude'] || ! $postdata['longitude'])
 										{
 											$response = $this->isNullField;
 										}
 										else
 										{
+											$selectToolsValue = $this->db->get('tools_value')
+											->result();
+
+											$keyVal = null;
+											foreach($selectToolsValue as $data)
+											{
+												if ( $data->key == 'km')
+												{
+													$keyVal	.= $data->value;
+												}
+											}
+
 											/* Master Order */
 											$dataMaster = array(
 													// 'id' => $ternaryId,
@@ -489,15 +504,19 @@ class Users extends REST_Controller {
 													'latitude' => $postdata['latitude'],
 													'longitude' => $postdata['longitude'],
 													'tanggal_waktu' => date('Y-m-d H:i:s'),
-													'status' => 1
+													'status' => 1,
+													'keterangan' => ( $postdata['keterangan']) ? trim($postdata['keterangan']) : 'nothing',
+													'delivery_fee' => (int) $postdata['kilometer'] * $keyVal
 												);
+
 											$this->db->insert('m_order' , $dataMaster);
 											/* Master Order */
 											$selectMaster = $this->db->get_where('m_order', $dataMaster);
 											$response = array(
 													'return' => true,
 													'message' => 'Berhasil input order!',
-													'data'	=> $selectMaster->row()->id
+													'data'	=> $selectMaster->row()->id,
+													'result' => $selectMaster->result()
 												);
 										}
 								break;

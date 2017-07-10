@@ -16,6 +16,15 @@ class Admin extends REST_Controller {
 			$x = "msg".$key;
 			$this->$x = $value;
 		}
+
+		$this->status = array(
+			1 => 'New Order',
+			2 => 'available order on admin',
+			3 => 'Send to courier',
+			4 => 'Accepted by kurir',
+			5 => 'Order Active',
+			6 => 'Order done'
+		);
 	}
 
 	public function index_get($action = '')
@@ -140,12 +149,15 @@ class Admin extends REST_Controller {
 					else
 					{
 						$postdata = array(
+								'method' => $this->post('method'),
+								'id_order' => $this->post('id_order'),
+								'id_kurir' => $this->post('id_kurir'),
 								'nama' => $this->post('nama'),
 								'username' => $this->post('username'),
 								'password' => $this->post('password')
 							);
 
-						if ( ! $postdata['nama'] || ! $postdata['username'] || ! $postdata['password'])
+						if ( ! $postdata['method'])
 						{
 							$response = array(
 									'return' => false,
@@ -154,37 +166,94 @@ class Admin extends REST_Controller {
 						}
 						else
 						{
-							$dataKurir = $this->db->get_where('m_kurir' , 
-								array('username' => $postdata['username']));
-
-							$data = array(
-									'nama' => $postdata['nama'],
-									'username' => $postdata['username'],
-									'password' => md5($postdata['password']),
-									'key' => generate_key(),
-									'tanggal' => date('Y-m-d')
-								);
-
-							$num = $dataKurir->num_rows();
-
-							if ( $num == 0)
+							switch( trimLower($postdata['method']))
 							{
-								$this->db->insert('m_kurir' , $data);
+								// tambah kurir
+								case 'add_kurir':
+									if ( ! $postdata['nama'] || ! $postdata['username'] || ! $postdata['password'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$dataKurir = $this->db->get_where('m_kurir' , 
+											array('username' => $postdata['username']));
 
-								$kurir = $this->db->get_where('m_kurir' , array(
-										'username' => $postdata['username']
-									))->result()[0];
+										$data = array(
+												'nama' => $postdata['nama'],
+												'username' => $postdata['username'],
+												'password' => md5($postdata['password']),
+												'key' => generate_key(),
+												'tanggal' => date('Y-m-d')
+											);
 
-								$this->db->insert('t_tracking' , array(
-										'id_kurir' => $kurir->id
-									));
+										$num = $dataKurir->num_rows();
+
+										if ( $num == 0)
+										{
+											$this->db->insert('m_kurir' , $data);
+
+											$kurir = $this->db->get_where('m_kurir' , array(
+													'username' => $postdata['username']
+												))->result()[0];
+
+											$this->db->insert('t_tracking' , array(
+													'id_kurir' => $kurir->id
+												));
+										}
+
+										$response = array(
+												'return' => ($num == 0) ? true : false,
+												($num == 0) ? 'message' : 'error_message' => 
+												($num == 0 ) ? 'Data kurir berhasil ditambahkan': $this->msgUsernameExist
+											);
+									}
+								break;
+
+								case 'send_order':
+									if ( ! $postdata['id_order'] || ! $postdata['id_kurir'])
+									{
+										$response = array(
+											'return' => false,
+											'error_message' => $this->msgNullField
+										);
+									}
+									else
+									{
+										$dataUpdate = array(
+												'id_kurir' => $postdata['id_kurir'],
+												'status' => 3
+											);
+
+										$this->db->set($dataUpdate);
+										$this->db->where( 
+											array('id' => $postdata['id_order']));
+										$this->db->update('m_order');
+
+										$query = $this->db->get_where('m_order' , array(
+												'id' => $postdata['id_order']
+											));
+
+										$row = $query->num_rows();
+
+										$response = array(
+												'return' => ( $row > 0) ? true : false,
+												 ( $row > 0) ? 'data' : 'error_message' 
+												 =>  ( $row > 0) ? $query->result()[0] : 'ID Order tidak ditemukan!'
+											);
+									}
+								break;
+
+								default:
+									$response = array(
+											'return' => false,
+											'error_message' => $this->msgErrorParameter
+										);
+								break;
 							}
-
-							$response = array(
-									'return' => ($num == 0) ? true : false,
-									($num == 0) ? 'message' : 'error_message' => 
-									($num == 0 ) ? 'Data kurir berhasil ditambahkan': $this->msgUsernameExist
-								);
 						}
 					}
 				}
