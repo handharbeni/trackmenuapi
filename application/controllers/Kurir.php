@@ -17,7 +17,7 @@ class Kurir extends REST_Controller {
 			$this->$x = $value;
 		}
 
-		$this->status = array(
+		$this->statusMessage = array(
 			1 => 'New Order',
 			2 => 'available order on admin',
 			3 => 'Send to courier',
@@ -71,8 +71,37 @@ class Kurir extends REST_Controller {
 													'id_kurir' => $kurir['id'],
 													'status' => 3
 												));
+										$result = null;
 
-										$result = $myorder->result();
+										foreach($myorder->result() as $row)
+										{
+											$user = $this->db->get_where('m_user' , array(
+													'id' => $row->id_user
+												))->result()[0];
+
+											$result[] = array(
+													'id_order' => $row->id,
+													'user' => array(
+															'id_user' => $user->id,
+															'nama' => $user->nama,
+															'email' => $user->email,
+															'alamat' => $user->alamat,
+															'location' => $user->location
+														),
+													'id_kurir' => $row->id_kurir,
+													'alamat' => $row->alamat,
+													'latitude' => $row->latitude,
+													'longitude' => $row->longitude,
+													'tanggal_waktu' => $row->tanggal_waktu,
+													'status' => array(
+															'key' => $row->status,
+															'value' => $this->statusMessage[$row->status]
+														),
+													'keterangan' => $row->keterangan,
+													'delivery_fee' => $row->delivery_fee
+												);
+										}
+
 										$num = $myorder->num_rows();
 
 										$response = array(
@@ -87,7 +116,37 @@ class Kurir extends REST_Controller {
 													'id_kurir' => $kurir['id'],
 												));
 
-										$result = $myorder->result();
+										$result = null;
+
+										foreach($myorder->result() as $row)
+										{
+											$user = $this->db->get_where('m_user' , array(
+													'id' => $row->id_user
+												))->result()[0];
+
+											$result[] = array(
+													'id_order' => $row->id,
+													'user' => array(
+															'id_user' => $user->id,
+															'nama' => $user->nama,
+															'email' => $user->email,
+															'alamat' => $user->alamat,
+															'location' => $user->location
+														),
+													'id_kurir' => $row->id_kurir,
+													'alamat' => $row->alamat,
+													'latitude' => $row->latitude,
+													'longitude' => $row->longitude,
+													'tanggal_waktu' => $row->tanggal_waktu,
+													'status' => array(
+															'key' => $row->status,
+															'value' => $this->statusMessage[$row->status]
+														),
+													'keterangan' => $row->keterangan,
+													'delivery_fee' => $row->delivery_fee
+												);
+										}
+
 										$num = $myorder->num_rows();
 
 										$response = array(
