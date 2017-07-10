@@ -34,6 +34,7 @@
 => id_order (optional)
 => id_menu
 => jumlah
+=> keterangan (optional)
 /users/order
 
 ### POST Add Order [OK]
@@ -43,6 +44,8 @@
 => alamat
 => latitude
 => longitude
+=> km
+=> keterangan (optional)
 /users/order
 
 ### POST Order Done [OK]
@@ -62,12 +65,11 @@
 ### GET Kurir Detail [OK]
 /kurir/?token={access_token}
 
-### GET Available Order
-
-/users/order?status=tersedia&token={access_token}
+### GET Semua Order [OK]
+/kurir/order?status=all&token={access_token}
 
 ### GET Order by self [OK]
-/users/order?status=self&token={access_token}
+/kurir/order?status=self&token={access_token}
 
 ### POST Login [OK] 
 => username 
@@ -77,7 +79,7 @@
 ### POST Order Active [OK]
 => token
 => id_order
-/users/order
+/kurir/order
 
 ## [Admin]
 
@@ -93,8 +95,6 @@
 => pasword
 /admin/login
 
-### POST Order to Kurir
-
 ### POST Menu (setting)
 
 ### POST Kurir (daftarkan kurir) [OK]
@@ -105,8 +105,9 @@
 => password
 /admin/kurir
 
-### POST order ke kurir
+### POST order ke kurir [OK]
 => token
 => method (send_order)
 => id_order
+=> id_kurir
 /admin/kurir
