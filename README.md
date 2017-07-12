@@ -86,16 +86,36 @@
 ### GET Admin Detail [OK]
 /admin/?token={access_token}
 
-### GET Order
-
-### GET Order Done
+### GET Order [OK]
+/admin/order?token={access_token}
 
 ### POST Login [OK]
 => username
 => pasword
 /admin/login
 
-### POST Menu (setting)
+### POST Menu (setting) [OK]
+=> token
+
+=> method (add)
+=> nama
+=> gambar
+=> harga
+=> kategori
+
+=> method (update)
+=> token
+=> id_menu 
+=> nama (optional)
+=> gambar (optional)
+=> harga (optional)
+=> kategori (optional)
+
+=> method (delete)
+=> token
+=> id_menu
+
+/admin/menu
 
 ### POST Kurir (daftarkan kurir) [OK]
 => token
@@ -114,10 +134,10 @@
 
 ## [Other]
 
-### GET Tools Value
+### GET Tools Value 
 
-## Get all result
+## Get all result [OK]
 /tools_value?access=true
 
-## Get result from key
+## Get result from key [OK]
 /tools_value?access=true&key={key}
