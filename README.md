@@ -111,3 +111,13 @@
 => id_order
 => id_kurir
 /admin/kurir
+
+## [Other]
+
+### GET Tools Value
+
+## Get all result
+/tools_value?access=true
+
+## Get result from key
+/tools_value?access=true&key={key}
