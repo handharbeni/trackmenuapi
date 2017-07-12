@@ -17,7 +17,7 @@ class Admin extends REST_Controller {
 			$this->$x = $value;
 		}
 
-		$this->status = array(
+		$this->statusMessage = array(
 			1 => 'New Order',
 			2 => 'available order on admin',
 			3 => 'Send to courier',
@@ -40,7 +40,6 @@ class Admin extends REST_Controller {
 				{
 					switch( trimLower($action))
 					{
-						// dummy
 						case 'menu':
 							$query = $this->db->get('m_menu');
 
@@ -48,6 +47,49 @@ class Admin extends REST_Controller {
 									'return' => ($query->num_rows() > 0) ? true: false,
 									($query->num_rows() > 0) ? 'data' : 'error_message' => ($query->num_rows() > 0) 
 									? $query->result() : 'Data menu kosong'
+								);
+						break;
+
+						case 'order':
+							$myorder = $this->db->from('m_order')->order_by('tanggal_waktu DESC')->get();
+
+							$result = null;
+
+							foreach($myorder->result() as $row)
+							{
+								$user = $this->db->get_where('m_user' , array(
+										'id' => $row->id_user
+									))->result()[0];
+
+								$result[] = array(
+										'id_order' => $row->id,
+										'user' => array(
+												'id_user' => $user->id,
+												'nama' => $user->nama,
+												'email' => $user->email,
+												'alamat' => $user->alamat,
+												'location' => $user->location
+											),
+										'id_kurir' => $row->id_kurir,
+										'alamat' => $row->alamat,
+										'latitude' => $row->latitude,
+										'longitude' => $row->longitude,
+										'tanggal_waktu' => $row->tanggal_waktu,
+										'status' => array(
+												'key' => $row->status,
+												'value' => $this->statusMessage[$row->status]
+											),
+										'keterangan' => $row->keterangan,
+										'delivery_fee' => $row->delivery_fee
+									);
+							}
+
+							$num = $myorder->num_rows();
+
+							$response = array(
+									'return' => ($num != 0) ? true : false,
+									($num != 0) ? 'data' : 'error_message' => 
+									($num != 0) ? $result : 'Orderan masih kosong!'
 								);
 						break;
 
@@ -252,6 +294,232 @@ class Admin extends REST_Controller {
 											'return' => false,
 											'error_message' => $this->msgErrorParameter
 										);
+								break;
+							}
+						}
+					}
+				}
+			break;
+
+			case 'menu':
+				if ( ! $token)
+				{
+					$response = array(
+							'return' => false,
+							'error_message' => $this->msgErrorToken
+						);
+				}
+				else
+				{
+					if ( ! $authToken)
+					{
+						$response = array(
+								'return' => false,
+								'error_message' => $this->msgWrongToken
+							);
+					}
+					else
+					{
+						$listMethod = array('add','update','delete');
+						$method = $this->post('method');
+
+						if ( ! in_array( trimLower($method) , $listMethod))
+						{
+							$response = array(
+									'return' => false,
+									'error_message' => $this->msgWrongMethod
+								);
+						}
+						else
+						{
+							$postdata = array(
+									'id_menu' => $this->post('id_menu'),
+									'nama' => $this->post('nama'),
+									'gambar' => $_FILES['gambar'],
+									'harga' => $this->post('harga'),
+									'kategori' => $this->post('kategori')
+								);
+
+							switch($method)
+							{
+								case 'add':
+									if ( ! $postdata['nama'] || ! $postdata['gambar'] 
+										|| ! $postdata['harga'] || ! $postdata['kategori'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$acceptedMime = array('image/png');
+
+										if ( ! in_array( checkMime($_FILES['gambar']['name']) , $acceptedMime))
+										{
+											$response = array(
+													'return' => false,
+													'error_message' => 'File gambar harus berekstensi PNG'
+												);
+										}
+										else
+										{
+											$dir = FCPATH.'images/'.date('Y-m-d').'/';
+											$ext = strtolower(array_pop(explode('.',$_FILES['gambar']['name'])));
+											$fileEncrypt = encryptFile($_FILES['gambar']['name']).'.'.$ext;
+
+											if ( ! is_dir($dir))
+											{
+												@chmod($dir, '-R 777');
+												@mkdir($dir);
+											}
+
+											$dataInsert = array(
+													'nama' => $postdata['nama'],
+													'gambar' => base_url().'images/'.date('Y-m-d').'/'.$fileEncrypt,
+													'harga' => $postdata['harga'],
+													'kategori' => $postdata['kategori']
+												);
+
+
+											$destination = $dir.$fileEncrypt;
+
+											move_uploaded_file($_FILES['gambar']['tmp_name'], $destination);
+
+											$this->db->insert('m_menu' , $dataInsert);
+
+											$response = array(
+													'return' => true,
+													'message' => 'Berhasil input data menu'
+												);
+										}
+									}
+								break;
+
+								case 'update':
+									if ( ! $postdata['id_menu'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										if ( $postdata['gambar'])
+										{
+											$acceptedMime = array('image/png');
+
+											if ( ! in_array( checkMime($_FILES['gambar']['name']) , $acceptedMime))
+											{
+												$response = array(
+														'return' => false,
+														'error_message' => 'File gambar harus berekstensi PNG'
+													);
+											}
+											else
+											{
+												$dir = FCPATH.'images/'.date('Y-m-d').'/';
+												$ext = strtolower(array_pop(explode('.',$_FILES['gambar']['name'])));
+												$fileEncrypt = encryptFile($_FILES['gambar']['name']).'.'.$ext;
+
+												if ( ! is_dir($dir))
+												{
+													@chmod($dir, '-R 777');
+													@mkdir($dir);
+												}
+
+												$destination = $dir.$fileEncrypt;
+
+												move_uploaded_file($_FILES['gambar']['tmp_name'], $destination);
+
+												$select = $this->db->get_where('m_menu' , 
+													array(
+															'id' => $postdata['id_menu']
+														))->result()[0];
+
+												$dataUpdate = array(
+														'nama' => $postdata['nama'] ? $postdata['nama'] : $select->nama,
+														'harga' => $postdata['harga'] ? $postdata['harga'] : $select->harga,
+														'gambar' => $postdata['gambar'] ? base_url().'images/'.date('Y-m-d').'/'.$fileEncrypt : $select->gambar,
+														'kategori' => $postdata['kategori'] ? $postdata['kategori'] : $select->kategori
+													);
+
+												$this->db->set($dataUpdate);
+												$this->db->where( array('id' => $postdata['id_menu']));
+												$this->db->update('m_menu');
+
+												$response = array(
+														'return' => true,
+														'x' => $_FILES['gambar'],
+														'message' => 'Berhasil ubah data menu'
+													);
+											}
+										}
+										else
+										{
+											$select = $this->db->get_where('m_menu' , 
+												array(
+														'id' => $postdata['id_menu']
+													))->result()[0];
+
+											$dataUpdate = array(
+													'nama' => $postdata['nama'] ? $postdata['nama'] : $select->nama,
+													'harga' => $postdata['harga'] ? $postdata['harga'] : $select->harga,
+													'gambar' => $select->gambar,
+													'kategori' => $postdata['kategori'] ? $postdata['kategori'] : $select->kategori
+												);
+
+											$this->db->set($dataUpdate);
+											$this->db->where( array('id' => $postdata['id_menu']));
+											$this->db->update('m_menu');
+
+											$response = array(
+													'return' => true,
+													'x' => $_FILES['gambar'],
+													'message' => 'Berhasil ubah data menu'
+												);
+										}
+									}
+								break;
+
+								case 'delete':
+									if ( ! $postdata['id_menu'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$select = $this->db->get_where('m_menu' , array(
+												'id' => $postdata['id_menu']
+											));
+
+										if ( $select->num_rows() > 0)
+										{
+											$x = explode('/' , $select->result()[0]->gambar);
+
+											$this->db->delete('m_menu' , array(
+													'id' => $postdata['id_menu']
+												));
+
+											// $unlinkFile = unlink(FCPATH.'images/'.$x[count($x)-2].'/'.$x[count($x)]-1);
+
+											$response = array(
+													'return' => true,
+													'message' => 'Berhasil di hapus!'
+												);
+										}
+										else
+										{
+											$response = array(
+													'return' => false,
+													'error_message' => 'ID Menu tidak ditemukan!'
+												);
+										}
+									}
 								break;
 							}
 						}
