@@ -399,7 +399,7 @@ class Users extends REST_Controller {
 							'alamat' => $this->post('alamat'),
 							'latitude' => $this->post('latitude'),
 							'longitude' => $this->post('longitude'),
-							'kilometer' => $this->post('km'),
+							'delivery_fee' => $this->post('delivery_fee'),
 							'keterangan' => $this->post('keterangan')
 						);
 
@@ -477,24 +477,12 @@ class Users extends REST_Controller {
 										$ternaryId = ( ! $postdata['id_order']) 
 													? $generate_id : $postdata['id_order'];
 
-										if ( ! $postdata['alamat'] || ! $postdata['kilometer'] || ! $postdata['latitude'] || ! $postdata['longitude'])
+										if ( ! $postdata['alamat'] || ! $postdata['delivery_fee'] || ! $postdata['latitude'] || ! $postdata['longitude'])
 										{
 											$response = $this->isNullField;
 										}
 										else
 										{
-											$selectToolsValue = $this->db->get('tools_value')
-											->result();
-
-											$keyVal = null;
-											foreach($selectToolsValue as $data)
-											{
-												if ( $data->key == 'km')
-												{
-													$keyVal	.= $data->value;
-												}
-											}
-
 											/* Master Order */
 											$dataMaster = array(
 													// 'id' => $ternaryId,
@@ -506,7 +494,7 @@ class Users extends REST_Controller {
 													'tanggal_waktu' => date('Y-m-d H:i:s'),
 													'status' => 1,
 													'keterangan' => ( $postdata['keterangan']) ? trim($postdata['keterangan']) : 'nothing',
-													'delivery_fee' => (int) $postdata['kilometer'] * $keyVal
+													'delivery_fee' => $postdata['delivery_fee']
 												);
 
 											$this->db->insert('m_order' , $dataMaster);

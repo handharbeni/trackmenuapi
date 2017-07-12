@@ -44,7 +44,7 @@
 => alamat
 => latitude
 => longitude
-=> km
+=> delivery_fee
 => keterangan (optional)
 /users/order
 

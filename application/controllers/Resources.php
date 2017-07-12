@@ -19,12 +19,54 @@ class Resources extends REST_Controller {
 	}
 
 
-	public function index_get()
+	public function index_get($action = '')
 	{
-		$response = array(
-				'return' => false,
-				'error_message' => $this->msgErrorParameter
-			);
+		if ( $action != null)
+		{
+			switch( trimLower($action))
+			{
+				case 'tools_value':
+					if ( ! $this->get('access'))
+					{
+						$response = array(
+							'return' => false,
+							'error_message' => $this->msgErrorParameter
+						);
+					}
+					else
+					{
+						$query = $this->db->from('tools_value');
+
+						if ( $this->get('key'))
+						{
+							$this->key = $this->get('key');
+							$query->where( array(
+									'key' => $this->key
+								));
+						}
+
+						$response = array(
+								'return' => true,
+								'data' => $query->get()->result()
+							);		
+					}
+				break;
+
+				default:
+					$response = array(
+						'return' => false,
+						'error_message' => $this->msgErrorParameter
+					);
+				break;
+			}
+		}
+		else
+		{
+			$response = array(
+					'return' => false,
+					'error_message' => $this->msgErrorParameter
+				);
+		}
 
 		return $this->response($response);
 	}
