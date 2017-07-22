@@ -19,11 +19,11 @@ class Kurir extends REST_Controller {
 
 		$this->statusMessage = array(
 			1 => 'New Order',
-			2 => 'available order on admin',
-			3 => 'Send to courier',
+			2 => 'Accepted order by Admin',
+			3 => 'Assign order by Admin to Courier',
 			4 => 'Accepted by kurir',
-			5 => 'Order Active',
-			6 => 'Order done'
+			5 => 'Order Active (Processing order)',
+			6 => 'Order done by Customer or Cancel order by Customer / Admin'
 		);
 	}
 
@@ -40,130 +40,56 @@ class Kurir extends REST_Controller {
 				{
 					switch( trimLower($action))
 					{
-						// dummy
-						case 'menu':
-							$query = $this->db->get('m_menu');
-							
-							$response = array(
-									'return' => ($query->num_rows() > 0) ? true: false,
-									($query->num_rows() > 0) ? 'data' : 'error_message' => ($query->num_rows() > 0) 
-									? $query->result() : 'Data menu kosong'
-								);
-						break;
-
 						case 'order':
-							$this->status = $this->get('status');
-
-							if ( ! $this->status)
-							{
-								$response = array(
-										'return' => false,
-										'error_message' => $this->msgErrorParameter
-									);
-							}
-							else
-							{
 								$kurir = $authToken;
-								switch( trimLower($this->status))
+								// $myorder = $this->db->get_where('m_order' , array(
+								// 			'id_kurir' => $kurir['id']
+								// 		));
+
+								$myorder = $this->db->from('m_order')
+								->where( array('id_kurir' => $kurir['id']))
+								->order_by("tanggal_waktu DESC")
+								->get();
+
+								$result = null;
+
+								foreach($myorder->result() as $row)
 								{
-									case 'self':
-										$myorder = $this->db->get_where('m_order' , array(
-													'id_kurir' => $kurir['id'],
-													'status' => 3
-												));
-										$result = null;
+									$user = $this->db->get_where('m_user' , array(
+											'id' => $row->id_user
+										))->result()[0];
 
-										foreach($myorder->result() as $row)
-										{
-											$user = $this->db->get_where('m_user' , array(
-													'id' => $row->id_user
-												))->result()[0];
-
-											$result[] = array(
-													'id_order' => $row->id,
-													'user' => array(
-															'id_user' => $user->id,
-															'nama' => $user->nama,
-															'email' => $user->email,
-															'alamat' => $user->alamat,
-															'location' => $user->location
-														),
-													'id_kurir' => $row->id_kurir,
-													'alamat' => $row->alamat,
-													'latitude' => $row->latitude,
-													'longitude' => $row->longitude,
-													'tanggal_waktu' => $row->tanggal_waktu,
-													'status' => array(
-															'key' => $row->status,
-															'value' => $this->statusMessage[$row->status]
-														),
-													'keterangan' => $row->keterangan,
-													'delivery_fee' => $row->delivery_fee
-												);
-										}
-
-										$num = $myorder->num_rows();
-
-										$response = array(
-												'return' => ($num != 0) ? true : false,
-												($num != 0) ? 'data' : 'error_message' => 
-												($num != 0) ? $result : 'Tidak ada orderan yang aktif!'
-											);
-									break;
-
-									case 'all':
-										$myorder = $this->db->get_where('m_order' , array(
-													'id_kurir' => $kurir['id'],
-												));
-
-										$result = null;
-
-										foreach($myorder->result() as $row)
-										{
-											$user = $this->db->get_where('m_user' , array(
-													'id' => $row->id_user
-												))->result()[0];
-
-											$result[] = array(
-													'id_order' => $row->id,
-													'user' => array(
-															'id_user' => $user->id,
-															'nama' => $user->nama,
-															'email' => $user->email,
-															'alamat' => $user->alamat,
-															'location' => $user->location
-														),
-													'id_kurir' => $row->id_kurir,
-													'alamat' => $row->alamat,
-													'latitude' => $row->latitude,
-													'longitude' => $row->longitude,
-													'tanggal_waktu' => $row->tanggal_waktu,
-													'status' => array(
-															'key' => $row->status,
-															'value' => $this->statusMessage[$row->status]
-														),
-													'keterangan' => $row->keterangan,
-													'delivery_fee' => $row->delivery_fee
-												);
-										}
-
-										$num = $myorder->num_rows();
-
-										$response = array(
-												'return' => ($num != 0) ? true : false,
-												($num != 0) ? 'data' : 'error_message' => 
-												($num != 0) ? $result : 'Orderan masih kosong!'
-											);
-									break;
-
-									default:
-										$response = array(
-												'return' => false,
-												'error_message' => $this->msgWrongMethod
-											);
-									break;
+									$result[] = array(
+											'id_order' => $row->id,
+											'user' => array(
+													'id_user' => $user->id,
+													'nama' => $user->nama,
+													'email' => $user->email,
+													'alamat' => $user->alamat,
+													'location' => $user->location
+												),
+											'id_kurir' => $row->id_kurir,
+											'alamat' => $row->alamat,
+											'latitude' => $row->latitude,
+											'longitude' => $row->longitude,
+											'tanggal_waktu' => $row->tanggal_waktu,
+											'status' => array(
+													'key' => $row->status,
+													'value' => $this->statusMessage[$row->status]
+												),
+											'keterangan' => $row->keterangan,
+											'delivery_fee' => $row->delivery_fee,
+											'sha' => generate_key()
+										);
 								}
-							}
+
+								$num = $myorder->num_rows();
+
+								$response = array(
+										'return' => ($num != 0) ? true : false,
+										($num != 0) ? 'data' : 'error_message' => 
+										($num != 0) ? $result : 'Tidak ada orderan yang tersedia!'
+									);
 						break;
 
 						default:
@@ -288,7 +214,8 @@ class Kurir extends REST_Controller {
 							{
 								$data = array(
 										'id_kurir' => $kurir['id'],
-										'status' => 3
+										'status' => 4,
+										'sha' => generate_key()
 									);
 
 								$this->db->set($data);
@@ -297,7 +224,7 @@ class Kurir extends REST_Controller {
 
 								$myorder = $this->db->get_where('m_order' , array(
 										'id_kurir' => $kurir['id'],
-										'status' => 3
+										'status' => 4
 									))->result();
 
 								$response = array(

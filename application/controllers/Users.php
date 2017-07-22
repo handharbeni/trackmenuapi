@@ -52,111 +52,114 @@ class Users extends REST_Controller {
 						
 						case 'order':
 							$dataUser = $authToken;
-							$this->option = trimLower($this->get('option'));
+							$queryOrder = $this->db->from('m_order')
+										->where( array('id_user' => $dataUser['id']))
+										->order_by('tanggal_waktu DESC')
+										->get();
 
-							if ( ! $this->option)
+							$dataOrder = array();
+
+							foreach($queryOrder->result() as $row)
 							{
-								$response = array(
-										'return' => false,
-										'error_message' => $this->msgErrorParameter
+								$total_belanja = 0;
+
+								if ( $row->id_kurir != 0 || $row->id_kurir != null)
+								{
+									$kurir = $this->db->get_where('m_kurir' ,
+										array('id' => $row->id_kurir))
+									->result();
+
+									foreach($kurir as $kurirdata)
+									{
+										$tmpkurir[] = array(
+												'id' => $kurirdata->id,
+												'nama' => $kurirdata->nama,
+												'foto_profil' => $kurirdata->foto_profil,
+												'no_hp' => $kurirdata->no_hp,
+												'no_plat' => $kurirdata->no_plat
+											);
+									}
+								}
+
+								if ( $row->id_outlet != 0 || $row->id_outlet != null)
+								{
+									$outlet = $this->db->get_where('m_outlet' ,
+										array('id' => $row->id_outlet))
+									->result();
+
+									foreach($outlet as $outletdata)
+									{
+										$resto = $this->db->get_where('m_resto' ,
+											array('id' => $outletdata->id_resto))
+										->result()[0];
+
+										$tmpoutlet[] = array(
+												'id' => $outletdata->id,
+												'resto' => array(
+														'id_resto' => $resto->id,
+														'nama_resto' => $resto->resto
+													),
+												'outlet' => $outletdata->outlet,
+												'alamat' => $outletdata->alamat,
+												'latitude' => $outletdata->lat,
+												'longitude' => $outletdata->long,
+												'tanggal_waktu' => $outletdata->tanggal_waktu,
+												'sha' => $outletdata->sha
+											);
+									}
+								}
+
+								$items = $this->db->get_where('t_order' , 
+									array('id_order' => $row->id));
+
+								$tmpitems = null;
+
+								foreach($items->result() as $menudata)
+								{
+									$menu = $this->db->get_where('m_menu' , 
+										array('id' => $menudata->id_menu))
+										->result()[0];
+
+									$total_belanja += $menudata->total_harga;
+
+									$tmpitems[] = array(
+											'id' => $menudata->id,
+											'id_order' => $menudata->id_order,
+											'menu' => array(
+													'id_menu' => $menu->id,
+													'nama_menu' => $menu->nama,
+													'gambar' => $menu->gambar,
+													'sha' => $menu->sha
+												),
+											'jumlah' => $menudata->jumlah,
+											'harga' => $menudata->harga,
+											'total_harga' => $menudata->total_harga,
+											'keterangan' => $menudata->keterangan
+										);
+								}
+
+								$x = explode(" " , $row->tanggal_waktu);
+
+								$dataOrder[] = array(
+										'id_order' => $row->id,
+										'id_user' => $dataUser['id'],
+										'outlet' => ($row->id_outlet != 0) ? $tmpoutlet : 'nothing',
+										'kurir' => ( $row->id_kurir != 0 ) ? $tmpkurir : 'nothing',
+										'nama_user' => $dataUser['nama'],
+										'email' => $dataUser['email'],
+										'total_belanja' => $total_belanja,
+										'tanggal' => $x[0],
+										'jam' => $x[1],
+										'status' => array('key' => $row->status , 'value' => $this->status[$row->status]), 
+										'sha' => $row->sha,
+										'items' => $tmpitems
 									);
 							}
-							else
-							{
-								switch( $this->option)
-								{
-									case 'all':
-										$sql = "SELECT t_order.* , m_order.* FROM t_order, m_order";
-										$sql.= " WHERE m_order.id_user = ".$dataUser['id'];
-										$sql.= " AND m_order.id = t_order.id_order ORDER BY tanggal_waktu DESC";
-										$queryOrder = $this->db->query($sql);
 
-										$dataOrder = array();
-
-										foreach($queryOrder->result() as $row)
-										{
-											$menu = $this->db->get_where('m_menu' , 
-												array('id' => $row->id_menu))
-											->result();
-
-											$kurir = $this->db->get_where('m_kurir' ,
-												array('id' => $row->id_kurir))
-											->result()[0];
-
-											$x = explode(" " , $row->tanggal_waktu);
-
-											$dataOrder[] = array(
-													'id' => $row->id,
-													'id_order' => $row->id_order,
-													'id_user' => $dataUser['id'],
-													'id_kurir' => $kurir->id,
-													'nama_user' => $dataUser['nama'],
-													'email' => $dataUser['email'],
-													'nama_kurir' => $kurir->nama,
-													'total_harga' => $row->total_harga,
-													'tanggal' => $x[0],
-													'jam' => $x[1],
-													'status' => array('key' => $row->status , 'value' => $this->status[$row->status]),
-													'items' => $menu,
-												);
-										}
-
-										$response = array(
-												'return' => true,
-												'data' => $dataOrder
-											);
-									break;
-
-									case 'active':
-										$sql = "SELECT t_order.* , m_order.* FROM t_order, m_order";
-										$sql.= " WHERE m_order.id_user = ".$dataUser['id'];
-										$sql.= " AND m_order.id = t_order.id_order AND status = 5";
-										$queryOrder = $this->db->query($sql);
-
-										$dataOrder = array();
-
-										foreach($queryOrder->result() as $row)
-										{
-											$menu = $this->db->get_where('m_menu' , 
-												array('id' => $row->id_menu))
-											->result();
-
-											$kurir = $this->db->get_where('m_kurir' ,
-												array('id' => $row->id_kurir))
-											->result()[0];
-
-											$x = explode(" " , $row->tanggal_waktu);
-
-											$dataOrder[] = array(
-													'id' => $row->id,
-													'id_order' => $row->id_order,
-													'id_user' => $dataUser['id'],
-													'id_kurir' => $kurir->id,
-													'nama_user' => $dataUser['nama'],
-													'email' => $dataUser['email'],
-													'nama_kurir' => $kurir->nama,
-													'total_harga' => $row->total_harga,
-													'tanggal' => $x[0],
-													'jam' => $x[1],
-													'status' => array('key' => $row->status , 'value' => $this->status[$row->status]),
-													'items' => $menu,
-												);
-										}
-
-										$response = array(
-												'return' => true,
-												'data' => $dataOrder
-											);
-									break;
-
-									default:
-										$response = array(
-												'return' => false,
-												'error_message' => $this->msgErrorParameter
-											);
-									break;
-								}
-							}
+							$response = array(
+									'return' => true,
+									'data' => $dataOrder
+								);
 						break;
 
 						case 'tracking':
@@ -494,7 +497,8 @@ class Users extends REST_Controller {
 													'tanggal_waktu' => date('Y-m-d H:i:s'),
 													'status' => 1,
 													'keterangan' => ( $postdata['keterangan']) ? trim($postdata['keterangan']) : 'nothing',
-													'delivery_fee' => $postdata['delivery_fee']
+													'delivery_fee' => $postdata['delivery_fee'],
+													'sha' => generate_key()
 												);
 
 											$this->db->insert('m_order' , $dataMaster);
@@ -517,7 +521,8 @@ class Users extends REST_Controller {
 									else
 									{
 										$data = array(
-												'status' => 5
+												'status' => 5,
+												'sha' => generate_key()
 											);
 
 										$checknum = $this->db->get_where('m_order' , array(

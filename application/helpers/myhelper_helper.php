@@ -110,8 +110,9 @@ if ( ! function_exists('authToken'))
 								'id' => $row->id,
 								'nama' => $row->nama,
 								'email' => $row->email,
+								'no_hp' => $row->no_hp,
 								'token' => $row->key,
-								'tanggal' => $row->tanggal_buat,
+								'terdaftar' => $row->tanggal_buat,
 								'alamat' => $row->alamat,
 								'location' => $row->location
 							);
@@ -133,13 +134,44 @@ if ( ! function_exists('authToken'))
 
 					foreach($query->result() as $row)
 					{
-						$data[] = array(
+						$tmpdata = null;
+
+						if ( $row->id_outlet != 0)
+						{
+							$outlet = $CI->db->get_where('m_outlet' , array('id' => $row->id_outlet))->result()[0];
+							$resto = $CI->db->get_where('m_resto' , array('id' => $outlet->id_resto))->result()[0];
+
+							$tmpdata[] = array(
 								'id' => $row->id,
-								'nama' => $row->nama,
+								'outlet' => array(
+										'id_outlet' => $outlet->id,
+										'restaurant' => array(
+												'id_restaurant' => $resto->id,
+												'nama_restaurant' => $resto->resto
+											),
+										'nama_outlet' => $outlet->outlet,
+										'alamat' => $outlet->alamat,
+										'latitude' => $outlet->lat,
+										'longitude' => $outlet->long,
+										'tanggal_waktu' => $outlet->tanggal_waktu,
+										'sha' => $outlet->sha
+									),
 								'username' => $row->username,
 								'token' => $row->key,
 								'tanggal' => $row->tanggal,
 							);
+						}
+						else
+						{
+							$tmpdata[] = array(
+									'id' => $row->id,
+									'username' => $row->username,
+									'token' => $row->key,
+									'tanggal' => $row->tanggal,
+								);							
+						}
+
+						array_push($data, $tmpdata);
 					}
 
 					return $data[0];	
@@ -162,6 +194,9 @@ if ( ! function_exists('authToken'))
 								'id' => $row->id,
 								'nama' => $row->nama,
 								'username' => $row->username,
+								'foto_profil' => $row->foto_profil,
+								'no_hp' => $row->no_hp,
+								'no_plat' => $row->no_plat,
 								'token' => $row->key,
 								'tanggal' => $row->tanggal,
 							);

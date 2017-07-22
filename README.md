@@ -2,33 +2,31 @@
 
 ## [User]
 
-### GET User Detail [OK]
+### GET User Detail
 /users/?token={access_token}
 
-### GET Menu [OK]
+### GET Menu
 /users/menu?token={access_token}
 
-### GET Order Active [OK]
-/users/order?option=active&token={access_token}
+### GET Order
+/users/order?token={access_token}
 
-### GET Order All [OK]
-/users/order?option=all&token={access_token}
-
-### GET Location Kurir [OK]
+### GET Location Kurir
 /users/tracking?kurir_id={id_kurir}&token={access_token}
 
-### POST Login [OK]
+### POST Login
 => email
 => password
 /users/login
 
-### POST Daftar [OK]
+### POST Daftar 
 => nama
 => email
+=> no_hp
 => password
 /users/daftar
 
-### POST Add Item [OK]
+### POST Add Item 
 => token
 => method (add_item)
 => id_order (optional)
@@ -37,7 +35,7 @@
 => keterangan (optional)
 /users/order
 
-### POST Add Order [OK]
+### POST Add Order 
 => token
 => method (new_order)
 => id_order (optional)
@@ -48,53 +46,55 @@
 => keterangan (optional)
 /users/order
 
-### POST Order Done [OK]
+### POST Order Done 
 => token
 => method (done)
 => id_order
 /users/order
 
-### POST Profile [OK]
+### POST Profile 
 => token
 => nama
 => lokasi
 => alamat
+=> no_hp
+/users/profile
 
 ## [Kurir]
 
-### GET Kurir Detail [OK]
+### GET Kurir Detail
 /kurir/?token={access_token}
 
-### GET Semua Order [OK]
-/kurir/order?status=all&token={access_token}
+### GET Order by self
+/kurir/order?token={access_token}
 
-### GET Order by self [OK]
-/kurir/order?status=self&token={access_token}
+### GET Order Detail
+/kurir/order?order_id={id_order}&token={access_token}
 
-### POST Login [OK] 
+### POST Login
 => username 
 => password
 /kurir/login
 
-### POST Order Active [OK]
+### POST Order Active 
 => token
 => id_order
 /kurir/order
 
 ## [Admin]
 
-### GET Admin Detail [OK]
+### GET Admin Detail
 /admin/?token={access_token}
 
-### GET Order [OK]
+### GET Order
 /admin/order?token={access_token}
 
-### POST Login [OK]
+### POST Login 
 => username
 => pasword
 /admin/login
 
-### POST Menu (setting) [OK]
+### POST Menu (setting) 
 => token
 
 => method (add)
@@ -117,7 +117,7 @@
 
 /admin/menu
 
-### POST Kurir (daftarkan kurir) [OK]
+### POST Kurir (daftarkan kurir) 
 => token
 => method (add_kurir)
 => nama
@@ -125,19 +125,52 @@
 => password
 /admin/kurir
 
-### POST order ke kurir [OK]
+### POST Outlet
+=> token
+=> method (add_outlet)
+=> username
+=> password
+=> id_resto
+=> nama_outlet
+=> alamat
+=> lat
+=> lang
+
+### POST Setting
+
+### POST Setting Profile
+
+[Outlet]
+### GET Outlet detail
+/outlet/?token={access_token}
+
+### GET Order by Outlet
+/outlet/order?token={access_token}
+
+### POST order ke kurir
 => token
 => method (send_order)
 => id_order
 => id_kurir
-/admin/kurir
+/outlet/kurir
+
+### POST Setting
 
 ## [Other]
 
-### GET Tools Value 
+### GET Tools Value
 
-## Get all result [OK]
-/tools_value?access=true
+## Get all result
+/public/tools_value?access=true
 
-## Get result from key [OK]
-/tools_value?access=true&key={key}
+## Get result from key
+/public/tools_value?access=true&key={key}
+
+### GET Hot Order [Coming Soon]
+/public/feature?type=hot-order&access=true
+
+### GET Banner [Coming Soon]
+/public/feature?type=banner&access=true
+
+### GET Outlet
+/public/list?type=outlet&access=true
