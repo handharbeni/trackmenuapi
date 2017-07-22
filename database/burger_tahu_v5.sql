@@ -53,20 +53,21 @@ CREATE TABLE IF NOT EXISTS `m_menu` (
   `gambar` varchar(255) DEFAULT 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png',
   `harga` varchar(50) DEFAULT NULL,
   `kategori` enum('Makanan','Minuman') DEFAULT NULL,
+  `sha` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
 
 -- Dumping data for table burger_tahu.m_menu: ~8 rows (approximately)
 /*!40000 ALTER TABLE `m_menu` DISABLE KEYS */;
-INSERT INTO `m_menu` (`id`, `nama`, `gambar`, `harga`, `kategori`) VALUES
-	(1, 'TEST', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '20000', 'Makanan'),
-	(2, 'Onde Onde', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '35000', 'Makanan'),
-	(3, 'Es Teh', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '5000', 'Minuman'),
-	(4, 'Es Jeruk', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '7000', 'Minuman'),
-	(5, 'Es Dawet', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '10000', 'Minuman'),
-	(6, 'Es Cendol', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '15000', 'Minuman'),
-	(7, 'Nasi Goreng', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '20000', 'Makanan'),
-	(8, 'Nasi Liwet', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '17000', 'Makanan');
+INSERT INTO `m_menu` (`id`, `nama`, `gambar`, `harga`, `kategori`, `sha`) VALUES
+	(1, 'TEST', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '20000', 'Makanan', NULL),
+	(2, 'Onde Onde', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '35000', 'Makanan', NULL),
+	(3, 'Es Teh', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '5000', 'Minuman', NULL),
+	(4, 'Es Jeruk', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '7000', 'Minuman', NULL),
+	(5, 'Es Dawet', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '10000', 'Minuman', NULL),
+	(6, 'Es Cendol', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '15000', 'Minuman', NULL),
+	(7, 'Nasi Goreng', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '20000', 'Makanan', NULL),
+	(8, 'Nasi Liwet', 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png', '17000', 'Makanan', NULL);
 /*!40000 ALTER TABLE `m_menu` ENABLE KEYS */;
 
 -- Dumping structure for table burger_tahu.m_order
@@ -82,9 +83,9 @@ CREATE TABLE IF NOT EXISTS `m_order` (
   `keterangan` text,
   `delivery_fee` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=latin1;
 
--- Dumping data for table burger_tahu.m_order: ~8 rows (approximately)
+-- Dumping data for table burger_tahu.m_order: ~30 rows (approximately)
 /*!40000 ALTER TABLE `m_order` DISABLE KEYS */;
 INSERT INTO `m_order` (`id`, `id_user`, `id_kurir`, `alamat`, `latitude`, `longitude`, `tanggal_waktu`, `status`, `keterangan`, `delivery_fee`) VALUES
 	(1, 1, 0, NULL, NULL, NULL, '2017-06-05 23:58:09', 1, NULL, NULL),
@@ -96,8 +97,57 @@ INSERT INTO `m_order` (`id`, `id_user`, `id_kurir`, `alamat`, `latitude`, `longi
 	(7, 1, 0, NULL, NULL, NULL, '2017-06-06 00:08:45', 1, NULL, NULL),
 	(8, 1, 0, NULL, NULL, NULL, '2017-06-18 23:52:33', 1, NULL, NULL),
 	(9, 1, 0, 'Jalan J.A. Suprapto 1C No.241', '-7.965931485933775', '112.63204883784056', '2017-07-10 20:48:52', 1, NULL, NULL),
-	(10, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-10 20:49:50', 1, NULL, NULL);
+	(10, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-10 20:49:50', 1, NULL, NULL),
+	(11, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-11 23:37:46', 1, 'nothing', '50000'),
+	(12, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-11 23:40:18', 1, 'nothing', '50000'),
+	(13, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-11 23:56:10', 1, 'test', '50000'),
+	(14, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-11 23:58:04', 1, 'nothing', '50000'),
+	(15, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-11 23:58:58', 1, 'nothing', '50000'),
+	(16, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-12 00:00:57', 1, 'nothing', '50000'),
+	(17, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-12 00:02:02', 1, 'nothing', '50000'),
+	(18, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-12 00:43:42', 1, 'nothing', '50000'),
+	(19, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-12 00:48:15', 1, 'nothing', '50000'),
+	(20, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-12 01:05:25', 1, 'nothing', '50000'),
+	(21, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-12 01:05:57', 1, 'nothing', '50000'),
+	(22, 1, 0, 'Jalan Jaksa Agung Suprapto No.51', '-7.969398310596278', '112.63182755559681', '2017-07-12 01:06:13', 1, 'nothing', '50000'),
+	(23, 1, 0, 'Jalan Jaksa Agung Suprapto No.59', '-7.966829655662079', '112.63291954994203', '2017-07-12 12:11:28', 1, 'nothing', '50000'),
+	(24, 1, 0, 'Jalan Lawu No.12', '-7.971189984354405', '112.62377690523864', '2017-07-12 15:23:58', 1, 'nothing', '40000'),
+	(25, 1, 0, 'Jalan Lawu No.12', '-7.971189984354405', '112.62377690523864', '2017-07-12 15:26:13', 1, 'nothing', '40000'),
+	(26, 1, 0, 'Jalan Kolonel Sugiono No.339-343', '-8.009258870260487', '112.62974347919226', '2017-07-12 17:54:38', 1, 'nothing', '90000'),
+	(27, 1, 0, 'Jalan Kolonel Sugiono No.339-343', '-8.009258870260487', '112.62974347919226', '2017-07-12 17:58:33', 1, 'nothing', '90000'),
+	(28, 1, 0, 'Jalan Raya Gadang No.35', '-8.011161258465417', '112.62892238795759', '2017-07-12 20:49:25', 1, 'nothing', '90000'),
+	(29, 1, 0, 'Jalan Raya Gadang No.35', '-8.011161258465417', '112.62892238795759', '2017-07-12 20:52:09', 1, 'nothing', '90000'),
+	(30, 1, 0, 'Jalan Puncak Borobudur No.6510', '-7.9359448', '112.6245207', '2017-07-17 14:57:10', 1, 'nothing', '10000');
 /*!40000 ALTER TABLE `m_order` ENABLE KEYS */;
+
+-- Dumping structure for table burger_tahu.m_outlet
+CREATE TABLE IF NOT EXISTS `m_outlet` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_resto` int(11) DEFAULT NULL,
+  `outlet` varchar(50) DEFAULT NULL,
+  `alamat` varchar(50) DEFAULT NULL,
+  `lat` varchar(50) DEFAULT NULL,
+  `long` varchar(50) DEFAULT NULL,
+  `sha` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_m_outlet_m_resto` (`id_resto`),
+  CONSTRAINT `FK_m_outlet_m_resto` FOREIGN KEY (`id_resto`) REFERENCES `m_resto` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Dumping data for table burger_tahu.m_outlet: ~0 rows (approximately)
+/*!40000 ALTER TABLE `m_outlet` DISABLE KEYS */;
+/*!40000 ALTER TABLE `m_outlet` ENABLE KEYS */;
+
+-- Dumping structure for table burger_tahu.m_resto
+CREATE TABLE IF NOT EXISTS `m_resto` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `resto` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Dumping data for table burger_tahu.m_resto: ~0 rows (approximately)
+/*!40000 ALTER TABLE `m_resto` DISABLE KEYS */;
+/*!40000 ALTER TABLE `m_resto` ENABLE KEYS */;
 
 -- Dumping structure for table burger_tahu.m_user
 CREATE TABLE IF NOT EXISTS `m_user` (
@@ -127,7 +177,7 @@ CREATE TABLE IF NOT EXISTS `tools_value` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
--- Dumping data for table burger_tahu.tools_value: ~0 rows (approximately)
+-- Dumping data for table burger_tahu.tools_value: ~1 rows (approximately)
 /*!40000 ALTER TABLE `tools_value` DISABLE KEYS */;
 INSERT INTO `tools_value` (`id`, `key`, `value`) VALUES
 	(1, 'km', '10000');
@@ -143,12 +193,47 @@ CREATE TABLE IF NOT EXISTS `t_order` (
   `total_harga` int(11) DEFAULT NULL,
   `keterangan` text,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=latin1;
 
--- Dumping data for table burger_tahu.t_order: ~1 rows (approximately)
+-- Dumping data for table burger_tahu.t_order: ~36 rows (approximately)
 /*!40000 ALTER TABLE `t_order` DISABLE KEYS */;
 INSERT INTO `t_order` (`id`, `id_order`, `id_menu`, `jumlah`, `harga`, `total_harga`, `keterangan`) VALUES
-	(2, 7, 1, 5, 20000, 100000, NULL);
+	(2, 7, 1, 5, 20000, 100000, NULL),
+	(3, 16, 2, 3, 35000, 105000, 'nothing'),
+	(4, 16, 1, 3, 20000, 60000, 'nothing'),
+	(5, 16, 7, 3, 20000, 60000, 'nothing'),
+	(6, 16, 8, 3, 17000, 51000, 'nothing'),
+	(7, 17, 7, 2, 20000, 40000, 'nothing'),
+	(8, 17, 8, 2, 17000, 34000, 'nothing'),
+	(9, 17, 2, 2, 35000, 70000, 'nothing'),
+	(10, 18, 3, 4, 5000, 20000, 'nothing'),
+	(11, 18, 4, 5, 7000, 35000, 'nothing'),
+	(12, 18, 5, 4, 10000, 40000, 'nothing'),
+	(13, 18, 6, 5, 15000, 75000, 'nothing'),
+	(14, 19, 2, 5, 35000, 175000, 'nothing'),
+	(15, 19, 8, 5, 17000, 85000, 'nothing'),
+	(16, 20, 2, 5, 35000, 175000, 'nothing'),
+	(17, 20, 1, 4, 20000, 80000, 'nothing'),
+	(18, 21, 1, 5, 20000, 100000, 'nothing'),
+	(19, 21, 8, 4, 17000, 68000, 'nothing'),
+	(20, 22, 2, 5, 35000, 175000, 'nothing'),
+	(21, 22, 8, 6, 17000, 102000, 'nothing'),
+	(22, 23, 1, 5, 20000, 100000, 'nothing'),
+	(23, 23, 8, 2, 17000, 34000, 'nothing'),
+	(24, 24, 1, 38, 20000, 760000, 'nothing'),
+	(25, 24, 7, 12, 20000, 240000, 'nothing'),
+	(26, 24, 2, 6, 35000, 210000, 'nothing'),
+	(27, 25, 7, 5, 20000, 100000, 'nothing'),
+	(28, 26, 3, 6, 5000, 30000, 'nothing'),
+	(29, 27, 3, 6, 5000, 30000, 'nothing'),
+	(30, 28, 1, 2, 20000, 40000, 'nothing'),
+	(31, 28, 2, 2, 35000, 70000, 'nothing'),
+	(32, 28, 7, 2, 20000, 40000, 'nothing'),
+	(33, 29, 1, 9, 20000, 180000, 'nothing'),
+	(34, 30, 1, 1, 20000, 20000, 'nothing'),
+	(35, 30, 2, 1, 35000, 35000, 'nothing'),
+	(36, 30, 8, 1, 17000, 17000, 'nothing'),
+	(37, 30, 7, 1, 20000, 20000, 'nothing');
 /*!40000 ALTER TABLE `t_order` ENABLE KEYS */;
 
 -- Dumping structure for table burger_tahu.t_tracking
