@@ -101,7 +101,7 @@ class Resources extends REST_Controller {
 						switch( trimLower($this->get('type')))
 						{
 							case 'outlet':
-								$sql = "SELECT m_outlet.* , m_resto.* FROM m_resto , m_outlet 
+								$sql = "SELECT m_outlet.id AS id_outlet, m_outlet.* , m_resto.* FROM m_resto , m_outlet 
 								WHERE m_resto.id = m_outlet.id_resto ORDER BY m_outlet.tanggal_waktu DESC";
 								$query = $this->db->query($sql);
 
@@ -109,8 +109,12 @@ class Resources extends REST_Controller {
 
 								foreach($query->result() as $row)
 								{
+									$token = $this->db->get_where('m_admin',
+										array('id_outlet' => $row->id_outlet))
+										->result()[0];
+
 									$data[] = array(
-											'id_outlet' => $row->id,
+											'id_outlet' => $row->id_outlet,
 											'restaurant' => array(
 													'id_resto' => $row->id_resto,
 													'nama_resto' => $row->resto,
@@ -120,12 +124,127 @@ class Resources extends REST_Controller {
 											'latitude' => $row->lat,
 											'longitude' => $row->long,
 											'tanggal_waktu' => $row->tanggal_waktu,
-											'sha' => $row->sha
+											'token' => $token->key,
+											'sha' => $row->sha,
 										);
 								}
 								$response = array(
 										'return' => true,
 										'data' => $data
+									);
+							break;
+
+							case 'user':
+								$query = $this->db
+								->from('m_user')
+								->order_by('tanggal_buat DESC')
+								->get();
+
+								$data = null;
+
+								foreach($query->result() as $row)
+								{
+									$data[] = array(
+											'id_user' => $row->id,
+											'nama' => $row->nama,
+											'email' => $row->email,
+											'no_hp' => $row->no_hp,
+											'alamat' => $row->alamat,
+											'location' => $row->location,
+											'key' => $row->key,
+											'tanggal_buat' => $row->tanggal_buat
+										);
+								}
+
+								$response = array(
+										'return' => true,
+										'data' => $data
+									);
+							break;
+
+							case 'admin':
+								$query = $this->db
+								->from('m_admin')
+								->order_by('tanggal DESC')
+								->get();
+
+								$data = null;
+
+								foreach($query->result() as $row)
+								{
+									$sql = "SELECT m_outlet.id AS id_outlet, m_outlet.* , m_resto.* FROM m_resto , m_outlet 
+									WHERE m_resto.id = m_outlet.id_resto AND m_outlet.id = ".$row->id_outlet." ORDER BY m_outlet.tanggal_waktu DESC";
+									$queryoutlet = $this->db->query($sql);
+
+									$outletdata = null;
+
+									foreach($queryoutlet->result() as $x)
+									{
+										$outletdata = array(
+												'id_outlet' => $x->id_outlet,
+												'restaurant' => array(
+														'id_resto' => $x->id_resto,
+														'nama_resto' => $x->resto,
+													),
+												'nama_outlet' => $x->outlet,
+												'alamat' => $x->alamat,
+												'latitude' => $x->lat,
+												'longitude' => $x->long,
+												'tanggal_waktu' => $x->tanggal_waktu,
+												'sha' => $x->sha,
+											);
+									}
+
+									$outlet = ($row->id_outlet == 0) ? "SuperUser" : $outletdata;
+
+									$data[] = array(
+											'id_admin' => $row->id,
+											'outlet' => $outlet,
+											'username' => $row->username,
+											'token' => $row->key,
+											'tanggal' => $row->tanggal 
+										);
+								}
+
+								$response = array(
+										'return' => true,
+										'data' => $data
+									);
+							break;
+
+							case 'kurir':
+								$query = $this->db
+								->from('m_kurir')
+								->order_by('tanggal DESC')
+								->get();
+
+								$data = null;
+								foreach($query->result() as $row)
+								{
+									$data[] = array(
+											'id' => $row->id,
+											'nama' => $row->nama,
+											'username' => $row->username,
+											'foto_profil' => $row->foto_profil,
+											'no_hp' => $row->no_hp,
+											'no_plat' => $row->no_plat,
+											'key' => $row->key,
+											'tanggal' => $row->tanggal
+										);
+								}
+
+								$response = array(
+										'return' => true,
+										'data' => $data
+									);
+							break;
+
+							case 'resto':
+								$query = $this->db->get('m_resto');
+
+								$response = array(
+										'return' => true,
+										'data' => $query->result()
 									);
 							break;
 

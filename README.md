@@ -86,15 +86,21 @@
 ### GET Admin Detail
 /admin/?token={access_token}
 
+### GET Menu
+/admin/menu?token={access_token}
+
 ### GET Order
 /admin/order?token={access_token}
 
-### POST Login 
+### GET Order Detail !k
+/admin/order?order_id={order_id}&token={access_token}
+
+### POST Login
 => username
 => pasword
 /admin/login
 
-### POST Menu (setting) 
+### POST Menu
 => token
 
 => method (add)
@@ -117,24 +123,55 @@
 
 /admin/menu
 
-### POST Kurir (daftarkan kurir) 
+### POST Kurir
 => token
-=> method (add_kurir)
+
+=> method (add_kurir) !k
 => nama
 => username
 => password
+=> foto
+=> no_hp
+=> no_plat
+
+=> method (delete_kurir)
+=> id_kurir
+
+=> method (update_kurir) !k
+
 /admin/kurir
 
 ### POST Outlet
 => token
+
 => method (add_outlet)
 => username
 => password
 => id_resto
 => nama_outlet
 => alamat
-=> lat
-=> lang
+
+=> method (update_outlet)
+=> id_outlet
+=> nama_outlet (optional)
+=> alamat (optional)
+=> username (optional)
+=> password (optional)
+
+=> method (delete_outlet)
+=> id_outlet
+
+/admin/outlet
+
+### POST User !k
+=> token
+
+=> method (add_user) !k
+
+=> method (delete_user) !k
+=> id_user
+
+=> method (update_user) !k
 
 ### POST Setting
 
@@ -143,6 +180,8 @@
 [Outlet]
 ### GET Outlet detail
 /outlet/?token={access_token}
+
+### GET Menu
 
 ### GET Order by Outlet
 /outlet/order?token={access_token}
@@ -174,3 +213,15 @@
 
 ### GET Outlet
 /public/list?type=outlet&access=true
+
+### GET User
+/public/list?type=user&access=true
+
+### GET Admin
+/public/list?type=admin&access=true
+
+### GET Kurir
+/public/list?type=kurir&access=true
+
+### GET Resto
+/public/list?type=resto&access=true

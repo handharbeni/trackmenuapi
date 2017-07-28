@@ -41,7 +41,10 @@ class Admin extends REST_Controller {
 					switch( trimLower($action))
 					{
 						case 'menu':
-							$query = $this->db->get('m_menu');
+							$query = $this->db
+							->from('m_menu')
+							->order_by('id DESC')
+							->get();
 
 							$response = array(
 									'return' => ($query->num_rows() > 0) ? true: false,
@@ -61,6 +64,24 @@ class Admin extends REST_Controller {
 							{
 								$total_belanja = 0;
 
+								if ( $row->id_user != 0 || $row->id_user != null)
+								{
+									$user = $this->db->get_where('m_user' ,
+										array('id' => $row->id_user))
+									->result();
+
+									foreach($user as $userdata)
+									{
+										$tmpuser = array(
+												'id' => $userdata->id,
+												'nama' => $userdata->nama,
+												'email' => $userdata->email,
+												'no_hp' => $userdata->no_hp,
+												'alamat' => $userdata->alamat
+											);
+									}
+								}
+
 								if ( $row->id_kurir != 0 || $row->id_kurir != null)
 								{
 									$kurir = $this->db->get_where('m_kurir' ,
@@ -69,7 +90,7 @@ class Admin extends REST_Controller {
 
 									foreach($kurir as $kurirdata)
 									{
-										$tmpkurir[] = array(
+										$tmpkurir = array(
 												'id' => $kurirdata->id,
 												'nama' => $kurirdata->nama,
 												'foto_profil' => $kurirdata->foto_profil,
@@ -91,7 +112,7 @@ class Admin extends REST_Controller {
 											array('id' => $outletdata->id_resto))
 										->result()[0];
 
-										$tmpoutlet[] = array(
+										$tmpoutlet = array(
 												'id' => $outletdata->id,
 												'resto' => array(
 														'id_resto' => $resto->id,
@@ -140,8 +161,14 @@ class Admin extends REST_Controller {
 
 								$dataOrder[] = array(
 										'id_order' => $row->id,
+										'user' => ($row->id_user != 0 ) ? $tmpuser : 'nothing',
 										'outlet' => ($row->id_outlet != 0) ? $tmpoutlet : 'nothing',
 										'kurir' => ( $row->id_kurir != 0 ) ? $tmpkurir : 'nothing',
+										'alamat_kirim' => $row->alamat,
+										'maps' => array(
+												'latitude' => $row->latitude,
+												'longitude' => $row->longitude
+											),
 										'total_belanja' => $total_belanja,
 										'tanggal' => $x[0],
 										'jam' => $x[1],
@@ -222,7 +249,8 @@ class Admin extends REST_Controller {
 					{
 						$response = array(
 							'return' => true,
-							'message' => 'Berhasil login'
+							'message' => 'Berhasil login',
+							'data' => $authLogin->result()[0]
 						);
 					}
 					else
@@ -274,7 +302,6 @@ class Admin extends REST_Controller {
 						{
 							switch( trimLower($postdata['method']))
 							{
-								// tambah kurir
 								case 'add_kurir':
 									if ( ! $postdata['nama'] || ! $postdata['username'] || ! $postdata['password'])
 									{
@@ -315,6 +342,25 @@ class Admin extends REST_Controller {
 												'return' => ($num == 0) ? true : false,
 												($num == 0) ? 'message' : 'error_message' => 
 												($num == 0 ) ? 'Data kurir berhasil ditambahkan': $this->msgUsernameExist
+											);
+									}
+								break;
+
+								case 'delete_kurir':
+									if ( ! $postdata['id_kurir'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$this->db->delete('m_kurir' , array('id' => $postdata['id_kurir']));
+
+										$response = array(
+												'return' => true,
+												'message' => 'Berhasil menghapus kurir!'
 											);
 									}
 								break;
@@ -590,6 +636,180 @@ class Admin extends REST_Controller {
 						}
 					}
 				}
+			break;
+
+			case 'outlet':
+				if ( ! $token)
+				{
+					$response = array(
+							'return' => false,
+							'error_message' => $this->msgErrorToken
+						);
+				}
+				else
+				{
+					if ( ! $authToken)
+					{
+						$response = array(
+								'return' => false,
+								'error_message' => $this->msgWrongToken
+							);
+					}
+					else
+					{
+						$listMethod = array('add_outlet','update_outlet','delete_outlet');
+						$method = $this->post('method');
+
+						if ( ! in_array( trimLower($method) , $listMethod))
+						{
+							$response = array(
+									'return' => false,
+									'error_message' => $this->msgWrongMethod
+								);
+						}
+						else
+						{
+							$postdata = array(
+									'username' => $this->post('username'),
+									'password' => $this->post('password'),
+									'id_resto' => $this->post('id_resto'),
+									'id_outlet' => $this->post('id_outlet'),
+									'nama_outlet' => $this->post('nama_outlet'),
+									'alamat' => $this->post('alamat'),
+									'latitude' => $this->post('latitude'),
+									'longitude' => $this->post('longitude')
+								);
+
+							switch($method)
+							{
+								case 'add_outlet':
+									if ( ! $postdata['username'] || ! $postdata['password']
+										|| ! $postdata['nama_outlet'] ||  ! $postdata['alamat'])
+									{
+										$response = array(
+											'return' => false,
+											'error_message' => $this->msgNullField
+										);
+									}
+									else
+									{
+										$rowAdmin = $this->db->get_where('m_admin',array(
+												'username' => $postdata['username']
+											))->num_rows();
+
+										if ( $rowAdmin > 0)
+										{
+											$response = array(
+													'return' => false,
+													'error_message' => 'Username sudah ada!'
+												);
+										}
+										else
+										{
+											$sha = generate_key();
+											$dataOutlet = array(
+													'id_resto' => $postdata['id_resto'],
+													'outlet' => $postdata['nama_outlet'],
+													'alamat' => $postdata['alamat'],
+													'lat' => null,
+													'long' => null,
+													'tanggal_waktu' => date('Y-m-d H:i:s'),
+													'sha' => $sha
+												);
+
+											$this->db->insert('m_outlet', $dataOutlet);
+
+											$queryOutlet = $this->db->get_where('m_outlet' , array(
+													'sha' => $sha
+												))->result()[0];
+
+											$dataAdmin = array(
+													'id_outlet' => $queryOutlet->id,
+													'username' => $postdata['username'],
+													'password' => md5($postdata['password']),
+													'key' => generate_key(),
+													'tanggal' => date('Y-m-d')
+												);	
+
+											$this->db->insert('m_admin' , $dataAdmin);
+
+											$response = array(
+												'return' => 'true',
+												'result' => 'Berhasil tambah outlet!',
+												'data' => $queryOutlet
+												);
+										}
+									}
+								break;
+
+								case 'update_outlet':
+									if ( ! $postdata['id_outlet'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);	
+									}
+									else
+									{
+										$query = $this->db->get_where('m_outlet',array(
+												'id' => $postdata['id_outlet']
+											))->result()[0];
+
+										$dataUpdate = array(
+												'outlet' => $postdata['nama_outlet'] ? 
+												$postdata['nama_outlet'] : $query->outlet,
+												'alamat' => $postdata['alamat'] ? 
+												$postdata['alamat'] : $query->alamat,
+												'lat' => $postdata['latitude'] ?
+												$postdata['latitude'] : $query->lat,
+												'long' => $postdata['longitude'] ?
+												$postdata['longitude'] : $query->longitude,
+												'sha' => generate_key()
+											);
+
+										$this->db->set($dataUpdate);
+										$this->db->where( array('id' => $postdata['id_outlet']));
+										$this->db->update('m_outlet');
+
+										$response = array(
+											'return' => 'true',
+											'message' => 'Berhasil mengubah data outlet!'
+											);
+									}
+								break;
+
+								case 'delete_outlet':
+									if ( ! $postdata['id_outlet'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);	
+									}
+									else
+									{
+										$this->db->delete('m_admin', array(
+												'id_outlet' => $postdata['id_outlet']
+											));
+										$this->db->delete('m_outlet', array(
+												'id' => $postdata['id_outlet']
+											));
+
+										$response = array(
+												'return' => true,
+												'message' => 'Berhasil menghapus outlet!'
+											);
+									}
+								break;
+							}
+						}
+					}
+				}
+			break;
+
+			case 'user':
+				// do
 			break;
 
 			default:

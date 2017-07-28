@@ -41,7 +41,10 @@ class Users extends REST_Controller {
 					switch( trimLower($action))
 					{
 						case 'menu':
-							$query = $this->db->get('m_menu');
+							$query = $this->db
+							->from('m_menu')
+							->order_by('id DESC')
+							->get();
 
 							$response = array(
 									'return' => ($query->num_rows() > 0) ? true: false,
