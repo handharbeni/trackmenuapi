@@ -186,6 +186,8 @@
 ### GET Order by Outlet
 /outlet/order?token={access_token}
 
+### GET Order Detail !k
+
 ### POST order ke kurir
 => token
 => method (send_order)
