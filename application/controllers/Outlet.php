@@ -151,6 +151,7 @@ class Outlet extends REST_Controller {
 
 						case 'order':
 							$queryOrder = $this->db->from('m_order')
+										->where( array('id_outlet' => $authToken[0]['outlet']['id_outlet']))
 										->order_by('tanggal_waktu DESC')
 										->get();
 
