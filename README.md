@@ -62,43 +62,59 @@
 
 ## [Kurir]
 
-### GET Kurir Detail
+### GET Kurir Detail [OK]
 /kurir/?token={access_token}
 
-### GET Order by self
+### GET Order by self [OK]
 /kurir/order?token={access_token}
 
-### GET Order Detail
+### GET Order by self and accepted [OK]
+/kurir/order?by=accepted&token={acccess_token}
+
+### GET Order Detail [OK]
 /kurir/order?order_id={id_order}&token={access_token}
 
-### POST Login
+### POST Login [OK]
 => username 
 => password
 /kurir/login
 
-### POST Order Active 
+### POST Order Active [OK]
 => token
 => id_order
 /kurir/order
 
 ## [Admin]
 
-### GET Admin Detail
+### GET Admin detail [OK]
 /admin/?token={access_token}
 
-### GET Menu
+### GET Menu [OK]
 /admin/menu?token={access_token}
 
-### GET Order
+### GET Order [OK]
 /admin/order?token={access_token}
 
-### GET Order Detail !k
+### GET Order Detail [OK]
 /admin/order?order_id={order_id}&token={access_token}
 
-### POST Login
+### POST Login [OK]
 => username
 => pasword
 /admin/login
+
+### POST order ke kurir [OK]
+=> token
+=> method (send_order)
+=> id_order
+=> id_kurir
+/admin/kurir
+
+### POST cancel order ke kurir !k
+=> token
+=> method (cancel_order)
+=> id_order
+/admin/kurir
 
 ### POST Menu
 => token
@@ -173,29 +189,45 @@
 
 => method (update_user) !k
 
-### POST Setting
+### POST Profile !
+/admin/profile
 
-### POST Setting Profile
+### POST Setting [OK]
+=> token
+=> km
+/admin/setting
 
 [Outlet]
 ### GET Outlet detail
 /outlet/?token={access_token}
 
 ### GET Menu
+/outlet/menu?token={access_token}
 
 ### GET Order by Outlet
 /outlet/order?token={access_token}
 
 ### GET Order Detail !k
+/outlet/order?order_id={id_order}&token={access_token}
 
-### POST order ke kurir
+### POST order ke kurir [OK]
 => token
 => method (send_order)
 => id_order
 => id_kurir
 /outlet/kurir
 
-### POST Setting
+### POST cancel order ke kurir !k
+=> token
+=> method (cancel_order)
+=> id_order
+/outlet/kurir
+
+### POST Profile !
+/outlet/profile
+
+### POST Setting !
+/outlet/setting
 
 ## [Other]
 

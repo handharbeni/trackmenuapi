@@ -48,10 +48,20 @@ class Kurir extends REST_Controller {
 
 								if ( ! $this->get('order_id'))
 								{
-									$myorder = $this->db->from('m_order')
-									->where( array('id_kurir' => $kurir['id']))
-									->order_by("tanggal_waktu DESC")
-									->get();
+									if ( $this->get('by') && $this->get('by') == 'accepted')
+									{
+										$myorder = $this->db->from('m_order')
+										->where( array('id_kurir' => $kurir['id'] , 'status' => 5))
+										->order_by("tanggal_waktu DESC")
+										->get();
+									}
+									else
+									{
+										$myorder = $this->db->from('m_order')
+										->where( array('id_kurir' => $kurir['id']))
+										->order_by("tanggal_waktu DESC")
+										->get();
+									}
 								}
 								else
 								{
@@ -98,7 +108,8 @@ class Kurir extends REST_Controller {
 													'nama' => $kurirdata->nama,
 													'foto_profil' => $kurirdata->foto_profil,
 													'no_hp' => $kurirdata->no_hp,
-													'no_plat' => $kurirdata->no_plat
+													'no_plat' => $kurirdata->no_plat,
+													'token' => $kurirdata->key
 												);
 										}
 									}
@@ -180,38 +191,6 @@ class Kurir extends REST_Controller {
 											'items' => $tmpitems
 										);
 								}
-
-								// $result = null;
-
-								// foreach($myorder->result() as $row)
-								// {
-								// 	$user = $this->db->get_where('m_user' , array(
-								// 			'id' => $row->id_user
-								// 		))->result()[0];
-
-								// 	$result[] = array(
-								// 			'id_order' => $row->id,
-								// 			'user' => array(
-								// 					'id_user' => $user->id,
-								// 					'nama' => $user->nama,
-								// 					'email' => $user->email,
-								// 					'alamat' => $user->alamat,
-								// 					'location' => $user->location
-								// 				),
-								// 			'id_kurir' => $row->id_kurir,
-								// 			'alamat' => $row->alamat,
-								// 			'latitude' => $row->latitude,
-								// 			'longitude' => $row->longitude,
-								// 			'tanggal_waktu' => $row->tanggal_waktu,
-								// 			'status' => array(
-								// 					'key' => $row->status,
-								// 					'value' => $this->statusMessage[$row->status]
-								// 				),
-								// 			'keterangan' => $row->keterangan,
-								// 			'delivery_fee' => $row->delivery_fee,
-								// 			'sha' => $row->sha
-								// 		);
-								// }
 
 								$num = $myorder->num_rows();
 
@@ -325,7 +304,7 @@ class Kurir extends REST_Controller {
 						{
 							$response = array(
 									'return' => false,
-									'error_message' => $this->msgNullField
+									'error_message' => $this->msgNullField,
 								);
 						}
 						else
@@ -343,6 +322,10 @@ class Kurir extends REST_Controller {
 							}
 							else
 							{
+								$rs = $allorder->result();
+
+								$rsAuth = $rs[0]->id_kurir != 0;
+								
 								$data = array(
 										'id_kurir' => $kurir['id'],
 										'status' => 4,
@@ -358,10 +341,11 @@ class Kurir extends REST_Controller {
 										'status' => 4
 									))->result();
 
+
 								$response = array(
 										'return' => true,
-										'message' => 'Berhasil mengambil orderan!',
-										'orders' => $myorder
+										'message' => $rsAuth ? 'Sudah ada yang mengambil orderan!' : 'Berhasil mengambil orderan!',
+										'orders' => $rsAuth ? null : $myorder
 									);
 							}
 						}

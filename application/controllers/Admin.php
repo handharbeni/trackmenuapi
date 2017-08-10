@@ -54,9 +54,19 @@ class Admin extends REST_Controller {
 						break;
 
 						case 'order':
-							$queryOrder = $this->db->from('m_order')
-										->order_by('tanggal_waktu DESC')
-										->get();
+							if ( ! $this->get('order_id'))
+							{
+								$queryOrder = $this->db->from('m_order')
+											->order_by('tanggal_waktu DESC')
+											->get();
+							}
+							else
+							{
+								$queryOrder = $this->db->from('m_order')
+											->where( array('id' => $this->get('order_id')))
+											->order_by('tanggal_waktu DESC')
+											->get();
+							}
 
 							$dataOrder = array();
 
@@ -810,6 +820,60 @@ class Admin extends REST_Controller {
 
 			case 'user':
 				// do
+			break;
+
+			case 'setting':
+				if ( ! $token)
+				{
+					$response = array(
+							'return' => false,
+							'error_message' => $this->msgErrorToken
+						);
+				}
+				else
+				{
+					if ( ! $authToken)
+					{
+						$response = array(
+								'return' => false,
+								'error_message' => $this->msgWrongToken
+							);
+					}
+					else
+					{
+						$km = $this->post('km');
+
+						if ( ! $km )
+						{
+							$response = array(
+									'return' => false,
+									'error_message' => $this->msgNullField
+								);
+						}
+						elseif ( ! is_numeric($km))
+						{
+							$response = array(
+									'return' => false,
+									'error_message' => 'Harga per-kilometer harus berupa angka'
+								);
+						}
+						else
+						{
+							$data = array(
+									'value' => $km
+								);
+
+							$this->db->set($data);
+							$this->db->where( array('key' => 'km'));
+							$this->db->update('tools_value');
+
+							$response = array(
+									'return' => true,
+									'message' => 'Berhasil mengubah harga per-kilometer'
+								);
+						}
+					}
+				}
 			break;
 
 			default:
