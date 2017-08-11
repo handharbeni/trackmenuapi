@@ -17,14 +17,15 @@ class Users extends REST_Controller {
 			$this->$x = $value;
 		}
 
-		$this->status = array(
-			1 => 'New Order',
-			2 => 'available order on admin',
-			3 => 'Send to courier',
-			4 => 'Accepted by kurir',
-			5 => 'Order Active',
-			6 => 'Order done'
-		);
+		$this->statusMessage = array(
+				1 => 'Pesanan baru',
+				2 => 'Pesanan sudah dterima oleh Admin',
+				3 => 'Pesanan akan diisi oleh Kurir',
+				4 => 'Pesanan diterima oleh Kurir',
+				5 => 'Pesanan sedang diantar oleh Kurir',
+				6 => 'Pesanan selesai',
+				7 => 'Pesanan telah dihapus'
+			);
 	}
 
 	public function index_get($action = '')
@@ -153,7 +154,7 @@ class Users extends REST_Controller {
 										'total_belanja' => $total_belanja,
 										'tanggal' => $x[0],
 										'jam' => $x[1],
-										'status' => array('key' => $row->status , 'value' => $this->status[$row->status]), 
+										'status' => array('key' => $row->status , 'value' => $this->statusMessage[$row->status]), 
 										'sha' => $row->sha,
 										'items' => $tmpitems
 									);
@@ -406,7 +407,8 @@ class Users extends REST_Controller {
 							'latitude' => $this->post('latitude'),
 							'longitude' => $this->post('longitude'),
 							'delivery_fee' => $this->post('delivery_fee'),
-							'keterangan' => $this->post('keterangan')
+							'keterangan' => $this->post('keterangan'),
+							'id_outlet' => $this->post('id_outlet')
 						);
 
 						$this->isNullField = array(
@@ -483,7 +485,7 @@ class Users extends REST_Controller {
 										$ternaryId = ( ! $postdata['id_order']) 
 													? $generate_id : $postdata['id_order'];
 
-										if ( ! $postdata['alamat'] || ! $postdata['delivery_fee'] || ! $postdata['latitude'] || ! $postdata['longitude'])
+										if ( ! $postdata['alamat'] || ! $postdata['delivery_fee'] || ! $postdata['latitude'] || ! $postdata['longitude'] || ! $postdata['id_outlet'])
 										{
 											$response = $this->isNullField;
 										}
@@ -494,6 +496,7 @@ class Users extends REST_Controller {
 													// 'id' => $ternaryId,
 													'id_user' => $user['id'],
 													'id_kurir' => 0,
+													'id_outlet' => $postdata['id_outlet'],
 													'alamat' => $postdata['alamat'],
 													'latitude' => $postdata['latitude'],
 													'longitude' => $postdata['longitude'],

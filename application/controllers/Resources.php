@@ -16,6 +16,16 @@ class Resources extends REST_Controller {
 			$x = "msg".$key;
 			$this->$x = $value;
 		}
+
+		$this->statusMessage = array(
+				1 => 'Pesanan baru',
+				2 => 'Pesanan sudah dterima oleh Admin',
+				3 => 'Pesanan akan diisi oleh Kurir',
+				4 => 'Pesanan diterima oleh Kurir',
+				5 => 'Pesanan sedang diantar oleh Kurir',
+				6 => 'Pesanan selesai',
+				7 => 'Pesanan telah dihapus'
+			);
 	}
 
 

@@ -39,6 +39,7 @@
 => token
 => method (new_order)
 => id_order (optional)
+=> id_outlet
 => alamat
 => latitude
 => longitude

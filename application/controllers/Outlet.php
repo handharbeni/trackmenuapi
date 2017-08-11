@@ -18,13 +18,14 @@ class Outlet extends REST_Controller {
 		}
 
 		$this->statusMessage = array(
-			1 => 'New Order',
-			2 => 'Accepted order by Admin',
-			3 => 'Assign order by Admin to Courier',
-			4 => 'Accepted by kurir',
-			5 => 'Order Active (Processing order)',
-			6 => 'Order done by Customer or Cancel order by Customer / Admin'
-		);
+				1 => 'Pesanan baru',
+				2 => 'Pesanan sudah dterima oleh Admin',
+				3 => 'Pesanan akan diisi oleh Kurir',
+				4 => 'Pesanan diterima oleh Kurir',
+				5 => 'Pesanan sedang diantar oleh Kurir',
+				6 => 'Pesanan selesai',
+				7 => 'Pesanan telah dihapus'
+			);
 	}
 
 	public function index_get($action = '')
