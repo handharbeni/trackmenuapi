@@ -44,6 +44,7 @@ class Users extends REST_Controller {
 						case 'menu':
 							$query = $this->db
 							->from('m_menu')
+							->where( array('deleted' => 0))
 							->order_by('id DESC')
 							->get();
 

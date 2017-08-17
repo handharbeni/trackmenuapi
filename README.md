@@ -118,6 +118,9 @@
 ### GET Menu [OK]
 /admin/menu?token={access_token}
 
+### GET Menu Detail [OK]
+/admin/menu?token={access_token}&sha={sha}
+
 ### GET Order [OK]
 /admin/order?token={access_token}
 
@@ -230,8 +233,11 @@
 ### GET Outlet detail
 /outlet/?token={access_token}
 
-### GET Menu
+### GET Menu [OK]
 /outlet/menu?token={access_token}
+
+### GET Menu Detail [OK]
+/admin/menu?token={access_token}&sha={sha}
 
 ### GET Order by Outlet
 /outlet/order?token={access_token}

@@ -189,10 +189,22 @@ class Outlet extends REST_Controller {
 						break;
 
 						case 'menu':
-							$query = $this->db
-							->from('m_menu')
-							->order_by('id DESC')
-							->get();
+							if ( $this->get('sha'))
+							{
+								$query = $this->db
+								->from('m_menu')
+								->where( array('deleted' => 0 ,'sha' => $this->get('sha')))
+								->order_by('id DESC')
+								->get();
+							}
+							else
+							{
+								$query = $this->db
+								->from('m_menu')
+								->where( array('deleted' => 0))
+								->order_by('id DESC')
+								->get();
+							}
 
 							$response = array(
 									'return' => ($query->num_rows() > 0) ? true: false,

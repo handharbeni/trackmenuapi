@@ -42,10 +42,22 @@ class Admin extends REST_Controller {
 					switch( trimLower($action))
 					{
 						case 'menu':
-							$query = $this->db
-							->from('m_menu')
-							->order_by('id DESC')
-							->get();
+							if ( $this->get('sha'))
+							{
+								$query = $this->db
+								->from('m_menu')
+								->where( array('deleted' => 0 ,'sha' => $this->get('sha')))
+								->order_by('id DESC')
+								->get();
+							}
+							else
+							{
+								$query = $this->db
+								->from('m_menu')
+								->where( array('deleted' => 0))
+								->order_by('id DESC')
+								->get();
+							}
 
 							$response = array(
 									'return' => ($query->num_rows() > 0) ? true: false,
@@ -580,7 +592,7 @@ class Admin extends REST_Controller {
 					}
 					else
 					{
-						$listMethod = array('add','update','delete');
+						$listMethod = array('add','update','delete','undo');
 						$method = $this->post('method');
 
 						if ( ! in_array( trimLower($method) , $listMethod))
@@ -826,12 +838,13 @@ class Admin extends REST_Controller {
 													'sha' => $postdata['sha']
 												))->result()[0];
 
+										$newSha = generate_key();
 										$dataUpdate = array(
 												'nama' => $postdata['nama'] ? $postdata['nama'] : $select->nama,
 												'harga' => $postdata['harga'] ? $postdata['harga'] : $select->harga,
 												'gambar' => $postdata['gambar'] ? $postdata['gambar'] : $select->gambar,
 												'kategori' => $postdata['kategori'] ? $postdata['kategori'] : $select->kategori,
-												'sha' => generate_key()
+												'sha' => $newSha
 											);
 
 										$this->db->set($dataUpdate);
@@ -840,7 +853,8 @@ class Admin extends REST_Controller {
 
 										$response = array(
 												'return' => true,
-												'message' => 'Berhasil ubah data menu'
+												'message' => 'Berhasil ubah data menu',
+												'new_sha' => $newSha
 											);
 									}
 								break;
@@ -863,15 +877,23 @@ class Admin extends REST_Controller {
 										{
 											$x = explode('/' , $select->result()[0]->gambar);
 
-											$this->db->delete('m_menu' , array(
-													'sha' => $postdata['sha']
-												));
+											$newSha = generate_key();
+
+											$data = array(
+													'deleted' => 1,
+													'sha' => $newSha
+												);
+
+											$this->db->set($data);
+											$this->db->where( array('sha' => $postdata['sha']));
+											$this->db->update('m_menu');
 
 											// $unlinkFile = unlink(FCPATH.'images/'.$x[count($x)-2].'/'.$x[count($x)]-1);
 
 											$response = array(
 													'return' => true,
-													'message' => 'Berhasil di hapus!'
+													'message' => 'Berhasil di hapus!',
+													'new_sha' => $newSha
 												);
 										}
 										else
@@ -879,6 +901,50 @@ class Admin extends REST_Controller {
 											$response = array(
 													'return' => false,
 													'error_message' => 'ID Menu tidak ditemukan!'
+												);
+										}
+									}
+								break;
+
+								case 'undo':
+									if ( ! $postdata['sha'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$select = $this->db->get_where('m_menu' , array(
+												'sha' => $postdata['sha']
+											));
+
+										if ( $select->num_rows() > 0)
+										{
+											$x = explode('/' , $select->result()[0]->gambar);
+
+											$data = array(
+													'deleted' => 0,
+													'sha' => generate_key()
+												);
+
+											$this->db->set($data);
+											$this->db->where( array('sha' => $postdata['sha']));
+											$this->db->update('m_menu');
+
+											// $unlinkFile = unlink(FCPATH.'images/'.$x[count($x)-2].'/'.$x[count($x)]-1);
+
+											$response = array(
+													'return' => true,
+													'message' => 'Berhasil di undo!'
+												);
+										}
+										else
+										{
+											$response = array(
+													'return' => false,
+													'error_message' => 'Sha tidak ditemukan!'
 												);
 										}
 									}
