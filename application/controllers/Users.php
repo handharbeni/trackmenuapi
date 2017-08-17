@@ -821,6 +821,7 @@ class Users extends REST_Controller {
 							'method' => $this->post('method'),
 							'id_order' => $this->post('id_order'),
 							'id_menu' => $this->post('id_menu'),
+							'id_outlet' => $this->post('id_outlet'),
 							'jumlah' => $this->post('jumlah'),
 							'alamat' => $this->post('alamat'),
 							'latitude' => $this->post('latitude'),
