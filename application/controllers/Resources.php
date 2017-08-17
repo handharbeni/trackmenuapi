@@ -16,6 +16,16 @@ class Resources extends REST_Controller {
 			$x = "msg".$key;
 			$this->$x = $value;
 		}
+
+		$this->statusMessage = array(
+				1 => 'Pesanan baru',
+				2 => 'Pesanan sudah dterima oleh Admin',
+				3 => 'Pesanan akan diisi oleh Kurir',
+				4 => 'Pesanan diterima oleh Kurir',
+				5 => 'Pesanan sedang diantar oleh Kurir',
+				6 => 'Pesanan selesai',
+				7 => 'Pesanan telah dihapus'
+			);
 	}
 
 
@@ -102,7 +112,7 @@ class Resources extends REST_Controller {
 						{
 							case 'outlet':
 								$sql = "SELECT m_outlet.id AS id_outlet, m_outlet.* , m_resto.* FROM m_resto , m_outlet 
-								WHERE m_resto.id = m_outlet.id_resto ORDER BY m_outlet.tanggal_waktu DESC";
+								WHERE m_resto.id = m_outlet.id_resto AND m_outlet.deleted = 0 ORDER BY m_outlet.tanggal_waktu DESC";
 								$query = $this->db->query($sql);
 
 								$data = null;
@@ -137,6 +147,7 @@ class Resources extends REST_Controller {
 							case 'user':
 								$query = $this->db
 								->from('m_user')
+								->where( array('blacklist' => 0))
 								->order_by('tanggal_buat DESC')
 								->get();
 
@@ -213,10 +224,22 @@ class Resources extends REST_Controller {
 							break;
 
 							case 'kurir':
-								$query = $this->db
-								->from('m_kurir')
-								->order_by('tanggal DESC')
-								->get();
+								if ( ! $this->get('key'))
+								{
+									$query = $this->db
+									->from('m_kurir')
+									->where( array('deleted' => 0))
+									->order_by('tanggal DESC')
+									->get();
+								}
+								else
+								{
+									$query = $this->db
+									->from('m_kurir')
+									->where( array('deleted' => 0 , 'key' => $this->get('key')))
+									->order_by('tanggal DESC')
+									->get();
+								}
 
 								$data = null;
 								foreach($query->result() as $row)
