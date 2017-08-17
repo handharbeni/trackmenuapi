@@ -41,125 +41,31 @@ class Outlet extends REST_Controller {
 				{
 					switch( trimLower($action))
 					{
-						// case 'order':
-						// 	$x = $authToken[0];
-						// 	$queryOrder = $this->db->from('m_order')
-						// 				->where( array('id_outlet' => $x['outlet']['id_outlet']))
-						// 				->order_by('tanggal_waktu DESC')
-						// 				->get();
-
-						// 	$dataOrder = array();
-
-						// 	foreach($queryOrder->result() as $row)
-						// 	{
-						// 		$total_belanja = 0;
-
-						// 		if ( $row->id_kurir != 0 || $row->id_kurir != null)
-						// 		{
-						// 			$kurir = $this->db->get_where('m_kurir' ,
-						// 				array('id' => $row->id_kurir))
-						// 			->result();
-
-						// 			foreach($kurir as $kurirdata)
-						// 			{
-						// 				$tmpkurir[] = array(
-						// 						'id' => $kurirdata->id,
-						// 						'nama' => $kurirdata->nama,
-						// 						'foto_profil' => $kurirdata->foto_profil,
-						// 						'no_hp' => $kurirdata->no_hp,
-						// 						'no_plat' => $kurirdata->no_plat
-						// 					);
-						// 			}
-						// 		}
-
-						// 		if ( $row->id_outlet != 0 || $row->id_outlet != null)
-						// 		{
-						// 			$outlet = $this->db->get_where('m_outlet' ,
-						// 				array('id' => $row->id_outlet))
-						// 			->result();
-
-						// 			foreach($outlet as $outletdata)
-						// 			{
-						// 				$resto = $this->db->get_where('m_resto' ,
-						// 					array('id' => $outletdata->id_resto))
-						// 				->result()[0];
-
-						// 				$tmpoutlet[] = array(
-						// 						'id' => $outletdata->id,
-						// 						'resto' => array(
-						// 								'id_resto' => $resto->id,
-						// 								'nama_resto' => $resto->resto
-						// 							),
-						// 						'outlet' => $outletdata->outlet,
-						// 						'alamat' => $outletdata->alamat,
-						// 						'latitude' => $outletdata->lat,
-						// 						'longitude' => $outletdata->long,
-						// 						'tanggal_waktu' => $outletdata->tanggal_waktu,
-						// 						'sha' => $outletdata->sha
-						// 					);
-						// 			}
-						// 		}
-
-						// 		$items = $this->db->get_where('t_order' , 
-						// 			array('id_order' => $row->id));
-
-						// 		$tmpitems = null;
-
-						// 		foreach($items->result() as $menudata)
-						// 		{
-						// 			$menu = $this->db->get_where('m_menu' , 
-						// 				array('id' => $menudata->id_menu))
-						// 				->result()[0];
-
-						// 			$total_belanja += $menudata->total_harga;
-
-						// 			$tmpitems[] = array(
-						// 					'id' => $menudata->id,
-						// 					'id_order' => $menudata->id_order,
-						// 					'menu' => array(
-						// 							'id_menu' => $menu->id,
-						// 							'nama_menu' => $menu->nama,
-						// 							'gambar' => $menu->gambar,
-						// 							'sha' => $menu->sha
-						// 						),
-						// 					'jumlah' => $menudata->jumlah,
-						// 					'harga' => $menudata->harga,
-						// 					'total_harga' => $menudata->total_harga,
-						// 					'keterangan' => $menudata->keterangan
-						// 				);
-						// 		}
-
-						// 		$x = explode(" " , $row->tanggal_waktu);
-
-						// 		$dataOrder[] = array(
-						// 				'id_order' => $row->id,
-						// 				'outlet' => ($row->id_outlet != 0) ? $tmpoutlet : 'nothing',
-						// 				'kurir' => ( $row->id_kurir != 0 ) ? $tmpkurir : 'nothing',
-						// 				'total_belanja' => $total_belanja,
-						// 				'tanggal' => $x[0],
-						// 				'jam' => $x[1],
-						// 				'status' => array('key' => $row->status , 'value' => $this->statusMessage[$row->status]), 
-						// 				'sha' => $row->sha,
-						// 				'items' => $tmpitems
-						// 			);
-						// 	}
-
-						// 	$response = array(
-						// 			'return' => true,
-						// 			'data' => $dataOrder
-						// 		);
-						// break;
-
 						case 'order':
-							$queryOrder = $this->db->from('m_order')
-										->where( array('id_outlet' => $authToken[0]['outlet']['id_outlet']))
-										->order_by('tanggal_waktu DESC')
-										->get();
+							if ( ! $this->get('order_id'))
+							{
+								$queryOrder = $this->db->from('m_order')
+											->where( array('id_outlet' => $authToken[0]['outlet']['id_outlet']))
+											->order_by('tanggal_waktu DESC')
+											->get();
+							}
+							else
+							{
+								$queryOrder = $this->db->from('m_order')
+											->where( array('id' => $this->get('order_id')))
+											->order_by('tanggal_waktu DESC')
+											->get();
+							}
 
 							$dataOrder = array();
 
 							foreach($queryOrder->result() as $row)
 							{
+								if ( $row->status == 7)
+								{
+									continue;
+								}
+
 								$total_belanja = 0;
 
 								if ( $row->id_user != 0 || $row->id_user != null)
@@ -293,6 +199,134 @@ class Outlet extends REST_Controller {
 									($query->num_rows() > 0) ? 'data' : 'error_message' => ($query->num_rows() > 0) 
 									? $query->result() : 'Data menu kosong'
 								);
+						break;
+
+						case 'rating':
+							$opsi = $this->get('opsi');
+
+							if ( ! $opsi)
+							{
+								$response = array(
+										'return' => false,
+										'error_message' => $this->msgNullField
+									);
+							}
+							else
+							{
+								$list_opsi = array('menu','kurir','outlet');
+
+								if ( ! in_array($opsi , $list_opsi))
+								{
+									$response = array(
+											'return' => false,
+											'error_message' => $this->msgWrongMethod
+										);
+								}
+								else
+								{
+									$query = $this->db->get_where('t_rating' , array(
+											'tipe' => $opsi
+										));
+
+									$num = $query->num_rows();
+
+									$data = null;
+
+									foreach( $query->result() as $row)
+									{
+										$rowMenu = ( $row->id_menu != 0);
+										$rowUser = ( $row->id_user != 0);
+										$rowOutlet = ( $row->id_outlet != 0);
+										$rowKurir = ( $row->id_kurir != 0);
+										if ( $rowMenu)
+										{
+											// menu
+											$menu = $this->db->get_where('m_menu' , array(
+													'id' => $row->id_menu
+												))->result()[0];
+										}
+
+										if ( $rowUser)
+										{
+											// user
+											$user = $this->db->get_where('m_user' , array(
+													'id' => $row->id_user
+												))->result()[0];
+										}
+
+										if ( $rowOutlet)
+										{
+											// outlet
+											$outlet = $this->db->get_where('m_outlet' , array(
+													'id' => $row->id_outlet
+												))->result()[0];
+
+											// resto
+											$resto = $this->db->get_where('m_resto' , array(
+													'id' => $outlet->id_resto
+												))->result()[0];
+										}
+
+										if ( $rowKurir)
+										{
+											// kurir
+											$kurir = $this->db->get_where('m_kurir' , array(
+													'id' => $row->id_kurir
+												))->result()[0];
+										}
+
+
+										$data[] = array(
+												'id_rating' => $row->id,
+												'menu' => $rowMenu ? array(
+														'id_menu' => $menu->id,
+														'nama' => $menu->nama,
+														'gambar' => $menu->gambar,
+														'harga' => $menu->harga,
+														'kategori' => $menu->kategori
+													) : 'nothing',
+
+												'user' => $rowUser ? array(
+														'id_user' => $user->id,
+														'nama' => $user->nama,
+														'email' => $user->email,
+														'no_hp' => $user->no_hp,
+														'alamat' => $user->alamat,
+														'location' => $user->location,
+													) : 'nothing' ,
+
+												'outlet' => $rowOutlet ? array(
+														'id_outlet' => $outlet->id,
+														'resto' => $resto,
+														'outlet' => $outlet->outlet,
+														'alamat' => $outlet->alamat,
+														'lokasi' => array(
+																'latitude' => $outlet->lat,
+																'longitude' => $outlet->long
+															),
+													) : 'nothing' ,
+
+												'kurir' => $rowKurir ? array(
+														'id_kurir' => $kurir->id,
+														'nama' => $kurir->nama,
+														'username' => $kurir->username,
+														'foto_profil' => $kurir->foto_profil,
+														'no_hp' => $kurir->no_hp,
+														'no_plat' => $kurir->no_plat,
+													) : 'nothing',
+												'rating' => $row->rating,
+												'keterangan' => $row->keterangan,
+												'tanggal_waktu' => $row->datetime
+											);
+									}
+
+									$response = array(
+											'return' => $num > 0 ? true : false,
+											$num > 0 ? 'data' : 'error_message' => 
+											$num > 0 ? $data : 'Data tidak ditemukan!'
+										);
+								}
+							}
 						break;
 
 						default:

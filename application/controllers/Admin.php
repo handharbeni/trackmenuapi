@@ -17,16 +17,6 @@ class Admin extends REST_Controller {
 			$this->$x = $value;
 		}
 
-		// $this->statusMessage = array(
-		// 	1 => 'New Order',
-		// 	2 => 'Accepted order by Admin',
-		// 	3 => 'Assign order by Admin to Courier',
-		// 	4 => 'Accepted by kurir',
-		// 	5 => 'Order Active (Processing order)',
-		// 	6 => 'Order done by Customer or Cancel order by Customer / Admin',
-		// 	7 => 'Order has been deleted!'
-		// );
-
 		$this->statusMessage = array(
 				1 => 'Pesanan baru',
 				2 => 'Pesanan sudah dterima oleh Admin',
@@ -153,7 +143,7 @@ class Admin extends REST_Controller {
 									array('id_order' => $row->id));
 
 								$tmpitems = null;
-
+								
 								foreach($items->result() as $menudata)
 								{
 									$menu = $this->db->get_where('m_menu' , 
@@ -203,6 +193,134 @@ class Admin extends REST_Controller {
 									'return' => true,
 									'data' => $dataOrder
 								);
+						break;
+
+						case 'rating':
+							$opsi = $this->get('opsi');
+
+							if ( ! $opsi)
+							{
+								$response = array(
+										'return' => false,
+										'error_message' => $this->msgNullField
+									);
+							}
+							else
+							{
+								$list_opsi = array('menu','kurir','outlet');
+
+								if ( ! in_array($opsi , $list_opsi))
+								{
+									$response = array(
+											'return' => false,
+											'error_message' => $this->msgWrongMethod
+										);
+								}
+								else
+								{
+									$query = $this->db->get_where('t_rating' , array(
+											'tipe' => $opsi
+										));
+
+									$num = $query->num_rows();
+
+									$data = null;
+
+									foreach( $query->result() as $row)
+									{
+										$rowMenu = ( $row->id_menu != 0);
+										$rowUser = ( $row->id_user != 0);
+										$rowOutlet = ( $row->id_outlet != 0);
+										$rowKurir = ( $row->id_kurir != 0);
+										if ( $rowMenu)
+										{
+											// menu
+											$menu = $this->db->get_where('m_menu' , array(
+													'id' => $row->id_menu
+												))->result()[0];
+										}
+
+										if ( $rowUser)
+										{
+											// user
+											$user = $this->db->get_where('m_user' , array(
+													'id' => $row->id_user
+												))->result()[0];
+										}
+
+										if ( $rowOutlet)
+										{
+											// outlet
+											$outlet = $this->db->get_where('m_outlet' , array(
+													'id' => $row->id_outlet
+												))->result()[0];
+
+											// resto
+											$resto = $this->db->get_where('m_resto' , array(
+													'id' => $outlet->id_resto
+												))->result()[0];
+										}
+
+										if ( $rowKurir)
+										{
+											// kurir
+											$kurir = $this->db->get_where('m_kurir' , array(
+													'id' => $row->id_kurir
+												))->result()[0];
+										}
+
+
+										$data[] = array(
+												'id_rating' => $row->id,
+												'menu' => $rowMenu ? array(
+														'id_menu' => $menu->id,
+														'nama' => $menu->nama,
+														'gambar' => $menu->gambar,
+														'harga' => $menu->harga,
+														'kategori' => $menu->kategori
+													) : 'nothing',
+
+												'user' => $rowUser ? array(
+														'id_user' => $user->id,
+														'nama' => $user->nama,
+														'email' => $user->email,
+														'no_hp' => $user->no_hp,
+														'alamat' => $user->alamat,
+														'location' => $user->location,
+													) : 'nothing' ,
+
+												'outlet' => $rowOutlet ? array(
+														'id_outlet' => $outlet->id,
+														'resto' => $resto,
+														'outlet' => $outlet->outlet,
+														'alamat' => $outlet->alamat,
+														'lokasi' => array(
+																'latitude' => $outlet->lat,
+																'longitude' => $outlet->long
+															),
+													) : 'nothing' ,
+
+												'kurir' => $rowKurir ? array(
+														'id_kurir' => $kurir->id,
+														'nama' => $kurir->nama,
+														'username' => $kurir->username,
+														'foto_profil' => $kurir->foto_profil,
+														'no_hp' => $kurir->no_hp,
+														'no_plat' => $kurir->no_plat,
+													) : 'nothing',
+												'rating' => $row->rating,
+												'keterangan' => $row->keterangan,
+												'tanggal_waktu' => $row->datetime
+											);
+									}
+
+									$response = array(
+											'return' => $num > 0 ? true : false,
+											$num > 0 ? 'data' : 'error_message' => 
+											$num > 0 ? $data : 'Data tidak ditemukan!'
+										);
+								}
+							}
 						break;
 
 						default:
@@ -309,7 +427,10 @@ class Admin extends REST_Controller {
 								'id_kurir' => $this->post('id_kurir'),
 								'nama' => $this->post('nama'),
 								'username' => $this->post('username'),
-								'password' => $this->post('password')
+								'password' => $this->post('password'),
+								'foto' => $this->post('foto'),
+								'no_hp' => $this->post('no_hp'),
+								'no_plat' => $this->post('no_plat')
 							);
 
 						if ( ! $postdata['method'])
@@ -324,7 +445,8 @@ class Admin extends REST_Controller {
 							switch( trimLower($postdata['method']))
 							{
 								case 'add_kurir':
-									if ( ! $postdata['nama'] || ! $postdata['username'] || ! $postdata['password'])
+									if ( ! $postdata['nama'] || !$postdata['username'] || ! $postdata['password']
+										|| ! $postdata['foto'] || ! $postdata['no_hp'] || ! $postdata['no_plat'])
 									{
 										$response = array(
 												'return' => false,
@@ -340,8 +462,12 @@ class Admin extends REST_Controller {
 												'nama' => $postdata['nama'],
 												'username' => $postdata['username'],
 												'password' => md5($postdata['password']),
+												'foto_profil' => $postdata['foto'],
+												'no_hp' => $postdata['no_hp'],
+												'no_plat' => $postdata['no_plat'],
 												'key' => generate_key(),
-												'tanggal' => date('Y-m-d')
+												'tanggal' => date('Y-m-d H:i:s'),
+												'deleted' => 0
 											);
 
 										$num = $dataKurir->num_rows();
@@ -355,7 +481,9 @@ class Admin extends REST_Controller {
 												))->result()[0];
 
 											$this->db->insert('t_tracking' , array(
-													'id_kurir' => $kurir->id
+													'id_kurir' => $kurir->id,
+													'latitude' => '-7.9414768',
+													'longitude' => '112.6208363'
 												));
 										}
 
@@ -424,7 +552,7 @@ class Admin extends REST_Controller {
 								default:
 									$response = array(
 											'return' => false,
-											'error_message' => $this->msgErrorParameter
+											'error_message' => $this->msgWrongMethod
 										);
 								break;
 							}
@@ -467,13 +595,194 @@ class Admin extends REST_Controller {
 							$postdata = array(
 									'id_menu' => $this->post('id_menu'),
 									'nama' => $this->post('nama'),
-									'gambar' => $_FILES['gambar'],
+									'gambar' => $this->post('gambar'),
 									'harga' => $this->post('harga'),
-									'kategori' => $this->post('kategori')
+									'kategori' => $this->post('kategori'),
+									'sha' => $this->post('sha')
 								);
 
 							switch($method)
 							{
+								// case 'add':
+								// 	if ( ! $postdata['nama'] || ! $postdata['gambar'] 
+								// 		|| ! $postdata['harga'] || ! $postdata['kategori'])
+								// 	{
+								// 		$response = array(
+								// 				'return' => false,
+								// 				'error_message' => $this->msgNullField
+								// 			);
+								// 	}
+								// 	else
+								// 	{
+								// 		$acceptedMime = array('image/png');
+
+								// 		if ( ! in_array( checkMime($_FILES['gambar']['name']) , $acceptedMime))
+								// 		{
+								// 			$response = array(
+								// 					'return' => false,
+								// 					'error_message' => 'File gambar harus berekstensi PNG'
+								// 				);
+								// 		}
+								// 		else
+								// 		{
+								// 			$dir = FCPATH.'images/'.date('Y-m-d').'/';
+								// 			$ext = strtolower(array_pop(explode('.',$_FILES['gambar']['name'])));
+								// 			$fileEncrypt = encryptFile($_FILES['gambar']['name']).'.'.$ext;
+
+								// 			if ( ! is_dir($dir))
+								// 			{
+								// 				@chmod($dir, '-R 777');
+								// 				@mkdir($dir);
+								// 			}
+
+								// 			$dataInsert = array(
+								// 					'nama' => $postdata['nama'],
+								// 					'gambar' => base_url().'images/'.date('Y-m-d').'/'.$fileEncrypt,
+								// 					'harga' => $postdata['harga'],
+								// 					'kategori' => $postdata['kategori']
+								// 				);
+
+
+								// 			$destination = $dir.$fileEncrypt;
+
+								// 			move_uploaded_file($_FILES['gambar']['tmp_name'], $destination);
+
+								// 			$this->db->insert('m_menu' , $dataInsert);
+
+								// 			$response = array(
+								// 					'return' => true,
+								// 					'message' => 'Berhasil input data menu'
+								// 				);
+								// 		}
+								// 	}
+								// break;
+
+								// case 'update':
+								// 	if ( ! $postdata['id_menu'])
+								// 	{
+								// 		$response = array(
+								// 				'return' => false,
+								// 				'error_message' => $this->msgNullField
+								// 			);
+								// 	}
+								// 	else
+								// 	{
+								// 		if ( $postdata['gambar'])
+								// 		{
+								// 			$acceptedMime = array('image/png');
+
+								// 			if ( ! in_array( checkMime($_FILES['gambar']['name']) , $acceptedMime))
+								// 			{
+								// 				$response = array(
+								// 						'return' => false,
+								// 						'error_message' => 'File gambar harus berekstensi PNG'
+								// 					);
+								// 			}
+								// 			else
+								// 			{
+								// 				$dir = FCPATH.'images/'.date('Y-m-d').'/';
+								// 				$ext = strtolower(array_pop(explode('.',$_FILES['gambar']['name'])));
+								// 				$fileEncrypt = encryptFile($_FILES['gambar']['name']).'.'.$ext;
+
+								// 				if ( ! is_dir($dir))
+								// 				{
+								// 					@chmod($dir, '-R 777');
+								// 					@mkdir($dir);
+								// 				}
+
+								// 				$destination = $dir.$fileEncrypt;
+
+								// 				move_uploaded_file($_FILES['gambar']['tmp_name'], $destination);
+
+								// 				$select = $this->db->get_where('m_menu' , 
+								// 					array(
+								// 							'id' => $postdata['id_menu']
+								// 						))->result()[0];
+
+								// 				$dataUpdate = array(
+								// 						'nama' => $postdata['nama'] ? $postdata['nama'] : $select->nama,
+								// 						'harga' => $postdata['harga'] ? $postdata['harga'] : $select->harga,
+								// 						'gambar' => $postdata['gambar'] ? base_url().'images/'.date('Y-m-d').'/'.$fileEncrypt : $select->gambar,
+								// 						'kategori' => $postdata['kategori'] ? $postdata['kategori'] : $select->kategori
+								// 					);
+
+								// 				$this->db->set($dataUpdate);
+								// 				$this->db->where( array('id' => $postdata['id_menu']));
+								// 				$this->db->update('m_menu');
+
+								// 				$response = array(
+								// 						'return' => true,
+								// 						'x' => $_FILES['gambar'],
+								// 						'message' => 'Berhasil ubah data menu'
+								// 					);
+								// 			}
+								// 		}
+								// 		else
+								// 		{
+								// 			$select = $this->db->get_where('m_menu' , 
+								// 				array(
+								// 						'id' => $postdata['id_menu']
+								// 					))->result()[0];
+
+								// 			$dataUpdate = array(
+								// 					'nama' => $postdata['nama'] ? $postdata['nama'] : $select->nama,
+								// 					'harga' => $postdata['harga'] ? $postdata['harga'] : $select->harga,
+								// 					'gambar' => $select->gambar,
+								// 					'kategori' => $postdata['kategori'] ? $postdata['kategori'] : $select->kategori
+								// 				);
+
+								// 			$this->db->set($dataUpdate);
+								// 			$this->db->where( array('id' => $postdata['id_menu']));
+								// 			$this->db->update('m_menu');
+
+								// 			$response = array(
+								// 					'return' => true,
+								// 					'x' => $_FILES['gambar'],
+								// 					'message' => 'Berhasil ubah data menu'
+								// 				);
+								// 		}
+								// 	}
+								// break;
+
+								// case 'delete':
+								// 	if ( ! $postdata['id_menu'])
+								// 	{
+								// 		$response = array(
+								// 				'return' => false,
+								// 				'error_message' => $this->msgNullField
+								// 			);
+								// 	}
+								// 	else
+								// 	{
+								// 		$select = $this->db->get_where('m_menu' , array(
+								// 				'id' => $postdata['id_menu']
+								// 			));
+
+								// 		if ( $select->num_rows() > 0)
+								// 		{
+								// 			$x = explode('/' , $select->result()[0]->gambar);
+
+								// 			$this->db->delete('m_menu' , array(
+								// 					'id' => $postdata['id_menu']
+								// 				));
+
+								// 			// $unlinkFile = unlink(FCPATH.'images/'.$x[count($x)-2].'/'.$x[count($x)]-1);
+
+								// 			$response = array(
+								// 					'return' => true,
+								// 					'message' => 'Berhasil di hapus!'
+								// 				);
+								// 		}
+								// 		else
+								// 		{
+								// 			$response = array(
+								// 					'return' => false,
+								// 					'error_message' => 'ID Menu tidak ditemukan!'
+								// 				);
+								// 		}
+								// 	}
+								// break;
+
 								case 'add':
 									if ( ! $postdata['nama'] || ! $postdata['gambar'] 
 										|| ! $postdata['harga'] || ! $postdata['kategori'])
@@ -485,51 +794,25 @@ class Admin extends REST_Controller {
 									}
 									else
 									{
-										$acceptedMime = array('image/png');
+										$dataInsert = array(
+												'nama' => $postdata['nama'],
+												'gambar' => $postdata['gambar'],
+												'harga' => $postdata['harga'],
+												'kategori' => $postdata['kategori'],
+												'sha' => generate_key()
+											);
 
-										if ( ! in_array( checkMime($_FILES['gambar']['name']) , $acceptedMime))
-										{
-											$response = array(
-													'return' => false,
-													'error_message' => 'File gambar harus berekstensi PNG'
-												);
-										}
-										else
-										{
-											$dir = FCPATH.'images/'.date('Y-m-d').'/';
-											$ext = strtolower(array_pop(explode('.',$_FILES['gambar']['name'])));
-											$fileEncrypt = encryptFile($_FILES['gambar']['name']).'.'.$ext;
+										$this->db->insert('m_menu' , $dataInsert);
 
-											if ( ! is_dir($dir))
-											{
-												@chmod($dir, '-R 777');
-												@mkdir($dir);
-											}
-
-											$dataInsert = array(
-													'nama' => $postdata['nama'],
-													'gambar' => base_url().'images/'.date('Y-m-d').'/'.$fileEncrypt,
-													'harga' => $postdata['harga'],
-													'kategori' => $postdata['kategori']
-												);
-
-
-											$destination = $dir.$fileEncrypt;
-
-											move_uploaded_file($_FILES['gambar']['tmp_name'], $destination);
-
-											$this->db->insert('m_menu' , $dataInsert);
-
-											$response = array(
-													'return' => true,
-													'message' => 'Berhasil input data menu'
-												);
-										}
+										$response = array(
+												'return' => true,
+												'message' => 'Berhasil input data menu'
+											);
 									}
 								break;
 
 								case 'update':
-									if ( ! $postdata['id_menu'])
+									if ( ! $postdata['sha'])
 									{
 										$response = array(
 												'return' => false,
@@ -538,85 +821,32 @@ class Admin extends REST_Controller {
 									}
 									else
 									{
-										if ( $postdata['gambar'])
-										{
-											$acceptedMime = array('image/png');
+										$select = $this->db->get_where('m_menu' , 
+											array(
+													'sha' => $postdata['sha']
+												))->result()[0];
 
-											if ( ! in_array( checkMime($_FILES['gambar']['name']) , $acceptedMime))
-											{
-												$response = array(
-														'return' => false,
-														'error_message' => 'File gambar harus berekstensi PNG'
-													);
-											}
-											else
-											{
-												$dir = FCPATH.'images/'.date('Y-m-d').'/';
-												$ext = strtolower(array_pop(explode('.',$_FILES['gambar']['name'])));
-												$fileEncrypt = encryptFile($_FILES['gambar']['name']).'.'.$ext;
+										$dataUpdate = array(
+												'nama' => $postdata['nama'] ? $postdata['nama'] : $select->nama,
+												'harga' => $postdata['harga'] ? $postdata['harga'] : $select->harga,
+												'gambar' => $postdata['gambar'] ? $postdata['gambar'] : $select->gambar,
+												'kategori' => $postdata['kategori'] ? $postdata['kategori'] : $select->kategori,
+												'sha' => generate_key()
+											);
 
-												if ( ! is_dir($dir))
-												{
-													@chmod($dir, '-R 777');
-													@mkdir($dir);
-												}
+										$this->db->set($dataUpdate);
+										$this->db->where( array('sha' => $postdata['sha']));
+										$this->db->update('m_menu');
 
-												$destination = $dir.$fileEncrypt;
-
-												move_uploaded_file($_FILES['gambar']['tmp_name'], $destination);
-
-												$select = $this->db->get_where('m_menu' , 
-													array(
-															'id' => $postdata['id_menu']
-														))->result()[0];
-
-												$dataUpdate = array(
-														'nama' => $postdata['nama'] ? $postdata['nama'] : $select->nama,
-														'harga' => $postdata['harga'] ? $postdata['harga'] : $select->harga,
-														'gambar' => $postdata['gambar'] ? base_url().'images/'.date('Y-m-d').'/'.$fileEncrypt : $select->gambar,
-														'kategori' => $postdata['kategori'] ? $postdata['kategori'] : $select->kategori
-													);
-
-												$this->db->set($dataUpdate);
-												$this->db->where( array('id' => $postdata['id_menu']));
-												$this->db->update('m_menu');
-
-												$response = array(
-														'return' => true,
-														'x' => $_FILES['gambar'],
-														'message' => 'Berhasil ubah data menu'
-													);
-											}
-										}
-										else
-										{
-											$select = $this->db->get_where('m_menu' , 
-												array(
-														'id' => $postdata['id_menu']
-													))->result()[0];
-
-											$dataUpdate = array(
-													'nama' => $postdata['nama'] ? $postdata['nama'] : $select->nama,
-													'harga' => $postdata['harga'] ? $postdata['harga'] : $select->harga,
-													'gambar' => $select->gambar,
-													'kategori' => $postdata['kategori'] ? $postdata['kategori'] : $select->kategori
-												);
-
-											$this->db->set($dataUpdate);
-											$this->db->where( array('id' => $postdata['id_menu']));
-											$this->db->update('m_menu');
-
-											$response = array(
-													'return' => true,
-													'x' => $_FILES['gambar'],
-													'message' => 'Berhasil ubah data menu'
-												);
-										}
+										$response = array(
+												'return' => true,
+												'message' => 'Berhasil ubah data menu'
+											);
 									}
 								break;
 
 								case 'delete':
-									if ( ! $postdata['id_menu'])
+									if ( ! $postdata['sha'])
 									{
 										$response = array(
 												'return' => false,
@@ -626,7 +856,7 @@ class Admin extends REST_Controller {
 									else
 									{
 										$select = $this->db->get_where('m_menu' , array(
-												'id' => $postdata['id_menu']
+												'sha' => $postdata['sha']
 											));
 
 										if ( $select->num_rows() > 0)
@@ -634,7 +864,7 @@ class Admin extends REST_Controller {
 											$x = explode('/' , $select->result()[0]->gambar);
 
 											$this->db->delete('m_menu' , array(
-													'id' => $postdata['id_menu']
+													'sha' => $postdata['sha']
 												));
 
 											// $unlinkFile = unlink(FCPATH.'images/'.$x[count($x)-2].'/'.$x[count($x)]-1);
@@ -732,8 +962,8 @@ class Admin extends REST_Controller {
 													'id_resto' => $postdata['id_resto'],
 													'outlet' => $postdata['nama_outlet'],
 													'alamat' => $postdata['alamat'],
-													'lat' => null,
-													'long' => null,
+													'lat' => $postdata['latitude'],
+													'long' => $postdata['longitude'],
 													'tanggal_waktu' => date('Y-m-d H:i:s'),
 													'sha' => $sha
 												);
@@ -810,12 +1040,20 @@ class Admin extends REST_Controller {
 									}
 									else
 									{
-										$this->db->delete('m_admin', array(
-												'id_outlet' => $postdata['id_outlet']
-											));
-										$this->db->delete('m_outlet', array(
-												'id' => $postdata['id_outlet']
-											));
+										// $this->db->delete('m_admin', array(
+										// 		'id_outlet' => $postdata['id_outlet']
+										// 	));
+										// $this->db->delete('m_outlet', array(
+										// 		'id' => $postdata['id_outlet']
+										// 	));
+										$data = array(
+												'deleted' => 1,
+												'sha' => generate_key()
+											);
+
+										$this->db->set($data);
+										$this->db->where( array('id' => $postdata['id_outlet']));
+										$this->db->update('m_outlet');
 
 										$response = array(
 												'return' => true,

@@ -14,12 +14,18 @@
 ### GET Location Kurir
 /users/tracking?kurir_id={id_kurir}&token={access_token}
 
+### GET Rating
+/users/rating?opsi={opsi}&token={access_token}
+
+### GET Search Order by ID
+/users/search?id_order={id_order}&token={access_token}
+
 ### POST Login
 => email
 => password
 /users/login
 
-### POST Daftar 
+### POST Daftar
 => nama
 => email
 => no_hp
@@ -61,6 +67,25 @@
 => no_hp
 /users/profile
 
+### POST Rating [OK]
+=> token
+=> id_user
+=> method (rating_menu)
+=> id_menu
+=> rating
+=> keterangan
+
+=> method (rating_kurir)
+=> id_kurir
+=> rating
+=> keterangan
+
+=> method (rating_outlet)
+=> id_outlet
+=> rating
+=> keterangan
+/users/rating
+
 ## [Kurir]
 
 ### GET Kurir Detail [OK]
@@ -99,6 +124,9 @@
 ### GET Order Detail [OK]
 /admin/order?order_id={order_id}&token={access_token}
 
+### GET Rating [OK]
+/admin/rating?opsi={opsi}&token={access_token}
+
 ### POST Login [OK]
 => username
 => pasword
@@ -117,7 +145,7 @@
 => id_order
 /admin/kurir
 
-### POST Menu
+### POST Menu [OK]
 => token
 
 => method (add)
@@ -128,7 +156,7 @@
 
 => method (update)
 => token
-=> id_menu 
+=> sha
 => nama (optional)
 => gambar (optional)
 => harga (optional)
@@ -136,14 +164,14 @@
 
 => method (delete)
 => token
-=> id_menu
+=> sha
 
 /admin/menu
 
 ### POST Kurir
 => token
 
-=> method (add_kurir) !k
+=> method (add_kurir) [OK]
 => nama
 => username
 => password
@@ -152,7 +180,7 @@
 => no_plat
 
 => method (delete_kurir)
-=> id_kurir
+=> token_kurir
 
 => method (update_kurir) !k
 
@@ -208,8 +236,11 @@
 ### GET Order by Outlet
 /outlet/order?token={access_token}
 
-### GET Order Detail !k
+### GET Order Detail [OK]
 /outlet/order?order_id={id_order}&token={access_token}
+
+### GET Rating [OK]
+/users/rating?opsi={opsi}&token={access_token}
 
 ### POST order ke kurir [OK]
 => token
