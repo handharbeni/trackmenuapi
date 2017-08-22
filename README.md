@@ -142,7 +142,7 @@
 => token
 => method (accept_order)
 => id_order
-/admin/kurir [!k]
+/admin/kurir
 
 ### POST order ke kurir [OK]
 => token
@@ -232,16 +232,29 @@
 => token
 
 => method (add_user) !k
+=> nama
+=> email
+=> password
+=> no_hp
+=> alamat
 
 => method (delete_user) !k
-=> id_user
+=> user_token
 
-=> method (update_user) !k
+/admin/user
 
 ### POST Profile [OK]
 => username (optional)
 => password (optional)
 /admin/profile
+
+### POST Banner !k
+=> token
+=> method (add_banner) !k
+
+=> method (delete_banner) !k
+
+=> method (update_banner) !k
 
 ### POST Setting [OK]
 => token
@@ -299,20 +312,20 @@
 ### GET Hot Order [Coming Soon]
 /public/feature?type=hot-order&access=true
 
-### GET Banner [Coming Soon]
+### GET Banner [OK]
 /public/feature?type=banner&access=true
 
-### GET Outlet
+### GET Outlet [OK]
 /public/list?type=outlet&access=true
 
-### GET User
+### GET User [OK]
 /public/list?type=user&access=true
 
-### GET Admin
+### GET Admin [OK]
 /public/list?type=admin&access=true
 
-### GET Kurir
+### GET Kurir [OK]
 /public/list?type=kurir&access=true
 
-### GET Resto
+### GET Resto [OK]
 /public/list?type=resto&access=true

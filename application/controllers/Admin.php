@@ -1164,7 +1164,120 @@ class Admin extends REST_Controller {
 			break;
 
 			case 'user':
-				// do
+				$postdata = $this->post();
+
+				if ( ! $token)
+				{
+					$response = array(
+							'return' => false,
+							'error_message' => $this->msgErrorToken
+						);
+				}
+				else
+				{
+					if ( ! $authToken)
+					{
+						$response = array(
+								'return' => false,
+								'error_message' => $this->msgWrongToken
+							);
+					}
+					elseif( ! $postdata['method'])
+					{
+						$response = array(
+								'return' => false,
+								'error_message' => $this->msgNullField
+							);
+					}
+					else
+					{
+						switch( trimLower($postdata['method']))
+						{
+							case 'delete_user':
+								if ( ! $postdata['user_token'])
+								{
+									$response = array(
+											'return' => false,
+											'error_message' => $this->msgNullField
+										);
+								}
+								else
+								{
+									$userToken = authToken('users' , $postdata['user_token']);
+									$userdata = $userToken;
+
+									if ( ! $userdata)
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgWrongToken
+											);
+									}
+									else
+									{
+										$data = array(
+												'blacklist' => 1
+											);
+
+										$this->db->set($data);
+										$this->db->where( array('key' => $postdata['user_token']));
+										$this->db->update('m_user');
+
+										$response = array(
+												'return' => true,
+												'message' => 'Berhasil menghapus pengguna!'
+											);
+									}
+								}
+							break;
+
+							case 'undo':
+								if ( ! $postdata['user_token'])
+								{
+									$response = array(
+											'return' => false,
+											'error_message' => $this->msgNullField
+										);
+								}
+								else
+								{
+									$userToken = authToken('users' , $postdata['user_token']);
+									$userdata = $userToken;
+
+									if ( ! $userdata)
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgWrongToken
+											);
+									}
+									else
+									{
+										$data = array(
+												'blacklist' => 0
+											);
+
+										$this->db->set($data);
+										$this->db->where( array('key' => $postdata['user_token']));
+										$this->db->update('m_user');
+
+										$response = array(
+												'return' => true,
+												'message' => 'Berhasil membatalkan!'
+											);
+									}
+								}
+							break;
+
+							default:
+								$response = array(
+										'return' => false,
+										'error_message' => $this->msgWrongMethod
+									);	
+							break;
+						}
+					}
+				}
 			break;
 
 			case 'setting':
