@@ -91,7 +91,7 @@ if ( ! function_exists('validEmail'))
 
 if ( ! function_exists('authToken'))
 {
-	function authToken($type , $token)
+	function authToken($type , $token , $viewpwd = '')
 	{
 		$CI =& get_instance();
 		switch($type)
@@ -141,34 +141,77 @@ if ( ! function_exists('authToken'))
 							$outlet = $CI->db->get_where('m_outlet' , array('id' => $row->id_outlet))->result()[0];
 							$resto = $CI->db->get_where('m_resto' , array('id' => $outlet->id_resto))->result()[0];
 
-							$tmpdata[] = array(
-								'id' => $row->id,
-								'outlet' => array(
-										'id_outlet' => $outlet->id,
-										'restaurant' => array(
-												'id_restaurant' => $resto->id,
-												'nama_restaurant' => $resto->resto
-											),
-										'nama_outlet' => $outlet->outlet,
-										'alamat' => $outlet->alamat,
-										'latitude' => $outlet->lat,
-										'longitude' => $outlet->long,
-										'tanggal_waktu' => $outlet->tanggal_waktu,
-										'sha' => $outlet->sha
-									),
-								'username' => $row->username,
-								'token' => $row->key,
-								'tanggal' => $row->tanggal,
-							);
+							if ( $viewpwd)
+							{
+								$data = array(
+									'id' => $row->id,
+									'outlet' => array(
+											'id_outlet' => $outlet->id,
+											'restaurant' => array(
+													'id_restaurant' => $resto->id,
+													'nama_restaurant' => $resto->resto
+												),
+											'nama_outlet' => $outlet->outlet,
+											'alamat' => $outlet->alamat,
+											'latitude' => $outlet->lat,
+											'longitude' => $outlet->long,
+											'tanggal_waktu' => $outlet->tanggal_waktu,
+											'sha' => $outlet->sha
+										),
+									'username' => $row->username,
+									'password' => $row->password,
+									'token' => $row->key,
+									'tanggal' => $row->tanggal,
+								);
+							}
+							else
+							{
+								$data = array(
+									'id' => $row->id,
+									'outlet' => array(
+											'id_outlet' => $outlet->id,
+											'restaurant' => array(
+													'id_restaurant' => $resto->id,
+													'nama_restaurant' => $resto->resto
+												),
+											'nama_outlet' => $outlet->outlet,
+											'alamat' => $outlet->alamat,
+											'latitude' => $outlet->lat,
+											'longitude' => $outlet->long,
+											'tanggal_waktu' => $outlet->tanggal_waktu,
+											'sha' => $outlet->sha
+										),
+									'username' => $row->username,
+									'token' => $row->key,
+									'tanggal' => $row->tanggal,
+								);
+							}
+							
+							$tmpdata[] = $data;
 						}
 						else
 						{
-							$tmpdata[] = array(
+							if ( $viewpwd)
+							{
+								$data = array(
+									'id' => $row->id,
+									'username' => $row->username,
+									'password' => $row->password,
+									'token' => $row->key,
+									'tanggal' => $row->tanggal,
+								);
+							}
+							else
+							{
+								$data = array(
 									'id' => $row->id,
 									'username' => $row->username,
 									'token' => $row->key,
 									'tanggal' => $row->tanggal,
-								);							
+								);
+							}
+
+							$tmpdata[] = $data;
 						}
 
 						array_push($data, $tmpdata);

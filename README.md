@@ -6,19 +6,19 @@
 /users/?token={access_token}
 
 ### GET Menu
-/users/menu?token={access_token}
+/users/menu
 
 ### GET Order
 /users/order?token={access_token}
 
 ### GET Location Kurir
-/users/tracking?kurir_id={id_kurir}&token={access_token}
+/users/tracking?kurir_id={id_kurir}
 
 ### GET Rating
-/users/rating?opsi={opsi}&token={access_token}
+/users/rating?opsi={opsi}
 
 ### GET Search Order by ID
-/users/search?id_order={id_order}&token={access_token}
+/users/search?id_order={id_order}
 
 ### POST Login
 => email
@@ -115,6 +115,9 @@
 ### GET Admin detail [OK]
 /admin/?token={access_token}
 
+### GET Admin password [OK]
+/admin/?token={access_token}&getpwd=true
+
 ### GET Menu [OK]
 /admin/menu?token={access_token}
 
@@ -135,6 +138,12 @@
 => pasword
 /admin/login
 
+### POST accept order !k
+=> token
+=> method (accept_order)
+=> id_order
+/admin/kurir [!k]
+
 ### POST order ke kurir [OK]
 => token
 => method (send_order)
@@ -147,6 +156,12 @@
 => method (cancel_order)
 => id_order
 /admin/kurir
+
+### POST delete order !k
+=> token
+=> method (delete_order)
+=> id_order
+/admin/kurir [!k]
 
 ### POST Menu [OK]
 => token
@@ -192,22 +207,24 @@
 ### POST Outlet
 => token
 
-=> method (add_outlet)
+=> method (add_outlet) [OK]
 => username
 => password
 => id_resto
 => nama_outlet
 => alamat
+=> latitude
+=> longitude
 
-=> method (update_outlet)
-=> id_outlet
+=> method (update_outlet) [OK]
 => nama_outlet (optional)
 => alamat (optional)
 => username (optional)
 => password (optional)
+=> latitude (optional)
+=> longitude (optional)
 
-=> method (delete_outlet)
-=> id_outlet
+=> method (delete_outlet) [OK]
 
 /admin/outlet
 
@@ -221,7 +238,9 @@
 
 => method (update_user) !k
 
-### POST Profile !
+### POST Profile [OK]
+=> username (optional)
+=> password (optional)
 /admin/profile
 
 ### POST Setting [OK]
