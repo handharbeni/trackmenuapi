@@ -82,10 +82,44 @@ class Resources extends REST_Controller {
 							break;
 
 							case 'banner':
+								$query = $this->db
+									->from('t_banner')
+									->where( array('deleted' => 0))
+									->order_by('modified_datetime DESC')
+									->get();
+
+								$num = $query->num_rows();
+
+								$data = null;
+
+								foreach($query->result() as $row)
+								{
+									$data[] = array(
+											'id' => $row->id,
+											'posisi' => $row->position,
+											'nama' => $row->nama,
+											'keterangan' => $row->keterangan,
+											'gambar' => $row->gambar,
+											'link' => $row->link,
+											'ditambahkan' => array(
+													'oleh' => $row->added_by,
+													'tanggal_waktu' => $row->added_datetime,
+													'timestamp' => strtotime($row->added_datetime)
+												),
+											'diubah' => array(
+													'oleh' => $row->modified_by,
+													'tanggal_waktu' => $row->modified_datetime,
+													'timestamp' => strtotime($row->modified_datetime)
+												),
+											'sha' => $row->sha,
+										);
+								}
+
 								$response = array(
-									'return' => true,
-									'message' => 'Coming soon feature'
-								);
+										'return' => $num > 0 ? true : false,
+										$num > 0 ? 'data' : 'error_message' => 
+										$num > 0 ? $data : 'Data banner masih kosong!'
+									);
 							break;
 
 							default:

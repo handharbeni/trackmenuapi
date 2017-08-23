@@ -6,19 +6,19 @@
 /users/?token={access_token}
 
 ### GET Menu
-/users/menu?token={access_token}
+/users/menu
 
 ### GET Order
 /users/order?token={access_token}
 
 ### GET Location Kurir
-/users/tracking?kurir_id={id_kurir}&token={access_token}
+/users/tracking?kurir_id={id_kurir}
 
 ### GET Rating
-/users/rating?opsi={opsi}&token={access_token}
+/users/rating?opsi={opsi}
 
 ### GET Search Order by ID
-/users/search?id_order={id_order}&token={access_token}
+/users/search?id_order={id_order}
 
 ### POST Login
 => email
@@ -115,8 +115,14 @@
 ### GET Admin detail [OK]
 /admin/?token={access_token}
 
+### GET Admin password [OK]
+/admin/?token={access_token}&getpwd=true
+
 ### GET Menu [OK]
 /admin/menu?token={access_token}
+
+### GET Menu Detail [OK]
+/admin/menu?token={access_token}&sha={sha}
 
 ### GET Order [OK]
 /admin/order?token={access_token}
@@ -132,6 +138,12 @@
 => pasword
 /admin/login
 
+### POST accept order !k
+=> token
+=> method (accept_order)
+=> id_order
+/admin/kurir
+
 ### POST order ke kurir [OK]
 => token
 => method (send_order)
@@ -144,6 +156,12 @@
 => method (cancel_order)
 => id_order
 /admin/kurir
+
+### POST delete order !k
+=> token
+=> method (delete_order)
+=> id_order
+/admin/kurir [!k]
 
 ### POST Menu [OK]
 => token
@@ -189,22 +207,24 @@
 ### POST Outlet
 => token
 
-=> method (add_outlet)
+=> method (add_outlet) [OK]
 => username
 => password
 => id_resto
 => nama_outlet
 => alamat
+=> latitude
+=> longitude
 
-=> method (update_outlet)
-=> id_outlet
+=> method (update_outlet) [OK]
 => nama_outlet (optional)
 => alamat (optional)
 => username (optional)
 => password (optional)
+=> latitude (optional)
+=> longitude (optional)
 
-=> method (delete_outlet)
-=> id_outlet
+=> method (delete_outlet) [OK]
 
 /admin/outlet
 
@@ -212,14 +232,29 @@
 => token
 
 => method (add_user) !k
+=> nama
+=> email
+=> password
+=> no_hp
+=> alamat
 
 => method (delete_user) !k
-=> id_user
+=> user_token
 
-=> method (update_user) !k
+/admin/user
 
-### POST Profile !
+### POST Profile [OK]
+=> username (optional)
+=> password (optional)
 /admin/profile
+
+### POST Banner !k
+=> token
+=> method (add_banner) !k
+
+=> method (delete_banner) !k
+
+=> method (update_banner) !k
 
 ### POST Setting [OK]
 => token
@@ -230,8 +265,11 @@
 ### GET Outlet detail
 /outlet/?token={access_token}
 
-### GET Menu
+### GET Menu [OK]
 /outlet/menu?token={access_token}
+
+### GET Menu Detail [OK]
+/admin/menu?token={access_token}&sha={sha}
 
 ### GET Order by Outlet
 /outlet/order?token={access_token}
@@ -274,20 +312,20 @@
 ### GET Hot Order [Coming Soon]
 /public/feature?type=hot-order&access=true
 
-### GET Banner [Coming Soon]
+### GET Banner [OK]
 /public/feature?type=banner&access=true
 
-### GET Outlet
+### GET Outlet [OK]
 /public/list?type=outlet&access=true
 
-### GET User
+### GET User [OK]
 /public/list?type=user&access=true
 
-### GET Admin
+### GET Admin [OK]
 /public/list?type=admin&access=true
 
-### GET Kurir
+### GET Kurir [OK]
 /public/list?type=kurir&access=true
 
-### GET Resto
+### GET Resto [OK]
 /public/list?type=resto&access=true
