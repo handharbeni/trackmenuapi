@@ -233,7 +233,23 @@ if ( ! function_exists('authToken'))
 
 					foreach($query->result() as $row)
 					{
-						$data[] = array(
+						if ( $viewpwd)
+						{
+							$data[] = array(
+								'id' => $row->id,
+								'nama' => $row->nama,
+								'username' => $row->username,
+								'password' => $row->password,
+								'foto_profil' => $row->foto_profil,
+								'no_hp' => $row->no_hp,
+								'no_plat' => $row->no_plat,
+								'token' => $row->key,
+								'tanggal' => $row->tanggal,
+							);
+						}
+						else
+						{
+							$data[] = array(
 								'id' => $row->id,
 								'nama' => $row->nama,
 								'username' => $row->username,
@@ -243,6 +259,7 @@ if ( ! function_exists('authToken'))
 								'token' => $row->key,
 								'tanggal' => $row->tanggal,
 							);
+						}
 					}
 
 					return $data[0];	

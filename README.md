@@ -197,10 +197,17 @@
 => no_hp
 => no_plat
 
-=> method (delete_kurir)
+=> method (delete_kurir) [OK]
 => token_kurir
 
 => method (update_kurir) !k
+=> token_kurir
+=> nama (optional)
+=> username (optional)
+=> password (optional)
+=> foto (optional)
+=> no_hp (optional)
+=> no_plat (optional)
 
 /admin/kurir
 

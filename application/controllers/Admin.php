@@ -513,7 +513,7 @@ class Admin extends REST_Controller {
 								break;
 
 								case 'delete_kurir':
-									if ( ! $postdata['id_kurir'])
+									if ( ! $this->post('token_kurir'))
 									{
 										$response = array(
 												'return' => false,
@@ -522,12 +522,107 @@ class Admin extends REST_Controller {
 									}
 									else
 									{
-										$this->db->delete('m_kurir' , array('id' => $postdata['id_kurir']));
+										$data = authToken('kurir', $this->post('token_kurir'));
 
+										if ( ! $data)
+										{
+											$response = array(
+													'return' => false,
+													'error_message' => $this->msgWrongToken
+												);
+										}
+										else
+										{
+											$this->db->set( array('deleted' => 1));
+											$this->db->where( array('key' => $data['token']));
+											$this->db->update('m_kurir');
+
+											$response = array(
+													'return' => true,
+													'message' => 'Berhasil menghapus kurir!'
+												);
+										}
+									}
+								break;
+
+								case 'undo':
+									if ( ! $this->post('token_kurir'))
+									{
 										$response = array(
-												'return' => true,
-												'message' => 'Berhasil menghapus kurir!'
+												'return' => false,
+												'error_message' => $this->msgNullField
 											);
+									}
+									else
+									{
+										$data = authToken('kurir', $this->post('token_kurir'));
+
+										if ( ! $data)
+										{
+											$response = array(
+													'return' => false,
+													'error_message' => $this->msgWrongToken
+												);
+										}
+										else
+										{
+											$this->db->set( array('deleted' => 0));
+											$this->db->where( array('key' => $data['token']));
+											$this->db->update('m_kurir');
+											
+											$response = array(
+													'return' => true,
+													'message' => 'Berhasil membatalkan!'
+												);
+										}
+									}
+								break;
+
+								case 'update_kurir':
+									if ( ! $this->post('token_kurir'))
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$data = authToken('kurir', $this->post('token_kurir'), TRUE);
+
+										if ( ! $data)
+										{
+											$response = array(
+													'return' => false,
+													'error_message' => $this->msgWrongToken
+												);
+										}
+										else
+										{
+											$dataUpdate = array(
+													'nama' => $postdata['nama'] ?
+														$postdata['nama'] : $data['nama'],
+													'username' => $postdata['username'] ?
+														$postdata['username'] : $data['username'],
+													'password' => $postdata['password'] ?
+														$postdata['password'] : $data['password'],
+													'foto_profil' => $postdata['foto'] ?
+														$postdata['foto'] : $data['foto_profil'],
+													'no_hp' => $postdata['no_hp'] ? 
+														$postdata['no_hp'] : $data['no_hp'],
+													'no_plat' => $postdata['no_plat'] ?
+														$postdata['no_plat'] : $data['no_plat']
+												);
+
+											$this->db->set($dataUpdate);
+											$this->db->where( array('key' => $data['token']));
+											$this->db->update('m_kurir');
+
+											$response = array(
+													'return' => true,
+													'message' => 'Berhasil mengubah data kurir!'
+												);
+										}
 									}
 								break;
 
