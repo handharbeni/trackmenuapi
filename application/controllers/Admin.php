@@ -17,15 +17,7 @@ class Admin extends REST_Controller {
 			$this->$x = $value;
 		}
 
-		$this->statusMessage = array(
-				1 => 'Pesanan baru',
-				2 => 'Pesanan sudah dterima oleh Admin',
-				3 => 'Pesanan akan diisi oleh Kurir',
-				4 => 'Pesanan diterima oleh Kurir',
-				5 => 'Pesanan sedang diantar oleh Kurir',
-				6 => 'Pesanan selesai',
-				7 => 'Pesanan telah dihapus'
-			);
+		$this->statusMessage = statusMessages();
 	}
 
 	public function index_get($action = '')
@@ -59,10 +51,57 @@ class Admin extends REST_Controller {
 								->get();
 							}
 
+							$data = null;
+
+							foreach($query->result() as $row)
+							{
+								$queryStokAvailable = $this->db->get_where('m_stok' , array('id_menu' => $row->id));
+								$queryStokUsed = $this->db->get_where('t_pemakaian_stok' , array('id_menu' => $row->id));
+
+								$numStokAvailable = $queryStokAvailable->num_rows();
+								$numStokUsed = $queryStokUsed->num_rows();
+
+								if ( $numStokUsed > 0)
+								{
+									$stokUsed = null;
+
+									foreach($queryStokUsed->result() as $x)
+									{
+										$stokUsed += $x->jumlah;
+									}
+								}
+
+								if ( $numStokAvailable > 0)
+								{
+									$stokAvailable = null;
+
+									foreach($queryStokAvailable->result() as $y)
+									{
+										$stokAvailable += $y->jumlah;
+									}
+								}
+
+								$total = ($numStokAvailable > 0 ? $stokAvailable : 0) - ($numStokUsed > 0 ? $stokUsed : 0);
+
+								$data[] = array(
+										'id' => $row->id,
+										'nama' => $row->nama,
+										'gambar' => $row->gambar,
+										'harga' => $row->harga,
+										'kategori' => $row->kategori,
+										'sha' => $row->sha,
+										'stok' => array(
+												'jumlah' => $numStokAvailable > 0 ? $stokAvailable : 0,
+												'digunakan' => $numStokUsed > 0 ? $stokUsed : 0,
+												'sisa' => (int) $total,
+											)
+									);
+							}
+
 							$response = array(
 									'return' => ($query->num_rows() > 0) ? true: false,
 									($query->num_rows() > 0) ? 'data' : 'error_message' => ($query->num_rows() > 0) 
-									? $query->result() : 'Data menu kosong'
+									? $data : 'Data menu kosong'
 								);
 						break;
 

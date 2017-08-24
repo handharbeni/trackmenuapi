@@ -17,15 +17,7 @@ class Users extends REST_Controller {
 			$this->$x = $value;
 		}
 
-		$this->statusMessage = array(
-				1 => 'Pesanan baru',
-				2 => 'Pesanan sudah dterima oleh Admin',
-				3 => 'Pesanan akan diisi oleh Kurir',
-				4 => 'Pesanan diterima oleh Kurir',
-				5 => 'Pesanan sedang diantar oleh Kurir',
-				6 => 'Pesanan selesai',
-				7 => 'Pesanan telah dihapus'
-			);
+		$this->statusMessage = statusMessages();
 	}
 
 	public function index_get($action = '')
@@ -908,6 +900,30 @@ class Users extends REST_Controller {
 												$response = array(
 														'return' => false,
 														'message' => 'Item Order Gagal Ditambahkan!'
+													);
+											}
+
+											/* Update stok */
+											$dataStok = array(
+													'id_order' => $postdata['id_order'],
+													'id_menu' => $postdata['id_menu'],
+													'jumlah' => $postdata['jumlah'],
+													'date_add' => date('Y-m-d H:i:s')
+												);
+											$insertToStok = $this->db->insert('t_pemakaian_stok' , $dataStok);
+
+											if ( $insertToStok)
+											{
+												$response = array(
+														'return' => true,
+														'error_message' => 'Berhasil mengupdate stok!'
+													);
+											}
+											else
+											{
+												$response = array(
+														'return' => false,
+														'error_message' => 'Gagal mengupdate stok!'
 													);
 											}
 										}else{

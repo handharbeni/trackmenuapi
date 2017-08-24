@@ -161,28 +161,30 @@
 => token
 => method (delete_order)
 => id_order
-/admin/kurir [!k]
+/admin/kurir
 
 ### POST Menu [OK]
 => token
 
-=> method (add)
+=> method (add) [OK]
 => nama
 => gambar
 => harga
 => kategori
 
-=> method (update)
-=> token
+=> method (update) [OK]
 => sha
 => nama (optional)
 => gambar (optional)
 => harga (optional)
 => kategori (optional)
 
-=> method (delete)
-=> token
+=> method (delete) [OK]
 => sha
+
+=> method (add_stok) [OK]
+=> id_menu
+=> jumlah
 
 /admin/menu
 
@@ -200,7 +202,7 @@
 => method (delete_kurir) [OK]
 => token_kurir
 
-=> method (update_kurir) !k
+=> method (update_kurir) [OK]
 => token_kurir
 => nama (optional)
 => username (optional)

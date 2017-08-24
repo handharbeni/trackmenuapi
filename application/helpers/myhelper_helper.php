@@ -368,3 +368,19 @@ if(!function_exists('checkMime'))
         }
     }
 }
+
+if ( ! function_exists('statusMessages'))
+{
+	function statusMessages()
+	{
+		return array(
+				1 => 'Pesanan baru',
+				2 => 'Pesanan sudah dterima oleh Admin',
+				3 => 'Pesanan akan diambil oleh Kurir',
+				4 => 'Pesanan diterima oleh Kurir',
+				5 => 'Pesanan sedang diantar oleh Kurir',
+				6 => 'Pesanan selesai',
+				7 => 'Pesanan telah dihapus'
+			);
+	}
+}
