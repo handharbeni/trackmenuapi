@@ -30,18 +30,76 @@ class Users extends REST_Controller {
 			switch( trimLower($action))
 			{
 				case 'menu':
-					$query = $this->db
-					->from('m_menu')
-					->where( array('deleted' => 0))
-					->order_by('id DESC')
-					->get();
+							if ( $this->get('sha'))
+							{
+								$query = $this->db
+								->from('m_menu')
+								->where( array('deleted' => 0 ,'sha' => $this->get('sha')))
+								->order_by('id DESC')
+								->get();
+							}
+							else
+							{
+								$query = $this->db
+								->from('m_menu')
+								->where( array('deleted' => 0))
+								->order_by('id DESC')
+								->get();
+							}
 
-					$response = array(
-							'return' => ($query->num_rows() > 0) ? true: false,
-							($query->num_rows() > 0) ? 'data' : 'error_message' => ($query->num_rows() > 0) 
-							? $query->result() : 'Data menu kosong'
-						);
-				break;
+							$data = null;
+
+							foreach($query->result() as $row)
+							{
+								$queryStokAvailable = $this->db->get_where('m_stok' , array('id_menu' => $row->id));
+								$queryStokUsed = $this->db->get_where('t_pemakaian_stok' , array('id_menu' => $row->id));
+
+								$numStokAvailable = $queryStokAvailable->num_rows();
+								$numStokUsed = $queryStokUsed->num_rows();
+
+								if ( $numStokUsed > 0)
+								{
+									$stokUsed = null;
+
+									foreach($queryStokUsed->result() as $x)
+									{
+										$stokUsed += $x->jumlah;
+									}
+								}
+
+								if ( $numStokAvailable > 0)
+								{
+									$stokAvailable = null;
+
+									foreach($queryStokAvailable->result() as $y)
+									{
+										$stokAvailable += $y->jumlah;
+									}
+								}
+
+								$total = ($numStokAvailable > 0 ? $stokAvailable : 0) - ($numStokUsed > 0 ? $stokUsed : 0);
+
+								$data[] = array(
+										'id' => $row->id,
+										'nama' => $row->nama,
+										'gambar' => $row->gambar,
+										'harga' => $row->harga,
+										'kategori' => $row->kategori,
+										'sha' => $row->sha,
+										'stok' => array(
+												'jumlah' => $numStokAvailable > 0 ? $stokAvailable : 0,
+												'digunakan' => $numStokUsed > 0 ? $stokUsed : 0,
+												'sisa' => (int) $total,
+											)
+									);
+							}
+
+							$response = array(
+									'return' => ($query->num_rows() > 0) ? true: false,
+									($query->num_rows() > 0) ? 'data' : 'error_message' => ($query->num_rows() > 0) 
+									? $data : 'Data menu kosong'
+								);
+						break;
 				
 				case 'order':
 					if ( $token)
