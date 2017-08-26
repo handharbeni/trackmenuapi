@@ -898,7 +898,8 @@ class Users extends REST_Controller {
 							'longitude' => $this->post('longitude'),
 							'delivery_fee' => $this->post('delivery_fee'),
 							'keterangan' => $this->post('keterangan'),
-							'id_outlet' => $this->post('id_outlet')
+							'id_outlet' => $this->post('id_outlet'),
+							'sha' => $this->post('sha')
 						);
 
 						$this->isNullField = array(
@@ -1034,36 +1035,35 @@ class Users extends REST_Controller {
 								break;
 
 								case 'done':
-									if ( ! $postdata['id_order'])
+									if ( ! $postdata['sha'])
 									{
-										$respose = $this->isNullField;
+										$response = array(
+											'return' => false,
+											'error_message' => $this->msgNullField
+										);
 									}
 									else
 									{
-										$data = array(
-												'status' => 5,
-												'sha' => generate_key()
-											);
+										$query = $this->db->get_where('m_order', array('sha' => $postdata['sha']));
 
-										$checknum = $this->db->get_where('m_order' , array(
-												'id' => $postdata['id_order']
-											));
-
-										$num = $checknum->num_rows();
+										$num = $query->num_rows();
 
 										if ( $num > 0)
 										{
+											$data = array(
+													'status' => 6,
+													'sha' => generate_key()
+												);
+
 											$this->db->set($data);
-											$this->db->where( 
-												array('id' => $postdata['id_order'], 'id_user' => $user['id']));
+											$this->db->where( array('sha' => $postdata['sha']));
 											$this->db->update('m_order');
 										}
 
 										$response = array(
-												'return' => ($num > 0) ? true : false,
-												($num > 0) ? 'message' : 'error_message' => 
-												($num > 0) ? 'Status order berhasil diubah!'
-												: 'ID Order tidak ditemukan!'
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' =>
+												$num > 0 ? 'Order selesai' : 'Order tidak ditemukan!'
 											);
 									}
 								break;

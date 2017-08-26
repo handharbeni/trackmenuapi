@@ -74,11 +74,21 @@ class Resources extends REST_Controller {
 							break;
 
 							case 'banner':
-								$query = $this->db
+								if ( $this->get('sha'))
+								{
+									$query = $this->db
+									->from('t_banner')
+									->where( array('sha' => $this->get('sha')))
+									->get();
+								}
+								else
+								{
+									$query = $this->db
 									->from('t_banner')
 									->where( array('deleted' => 0))
 									->order_by('position DESC')
 									->get();
+								}
 
 								$num = $query->num_rows();
 
