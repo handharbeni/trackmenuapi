@@ -263,7 +263,7 @@
 => password (optional)
 /admin/profile
 
-### POST Banner !k
+### POST Banner [OK]
 => token
 
 => method (add_banner) [OK]
@@ -286,6 +286,19 @@
 => token
 => km
 /admin/setting
+
+### POST Stok !k
+=> token
+
+=> method (add_stok)
+=> sha
+=> jumlah
+/admin/menu
+
+=> method (update_stok)
+=> sha
+=> jumlah
+/admin/menu
 
 [Outlet]
 ### GET Outlet detail

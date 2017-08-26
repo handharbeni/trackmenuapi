@@ -940,7 +940,7 @@ class Admin extends REST_Controller {
 					}
 					else
 					{
-						$listMethod = array('add','update','delete','undo');
+						$listMethod = array('add','update','delete','undo','add_stok','update_stok');
 						$method = $this->post('method');
 
 						if ( ! in_array( trimLower($method) , $listMethod))
@@ -958,7 +958,8 @@ class Admin extends REST_Controller {
 									'gambar' => $this->post('gambar'),
 									'harga' => $this->post('harga'),
 									'kategori' => $this->post('kategori'),
-									'sha' => $this->post('sha')
+									'sha' => $this->post('sha'),
+									'jumlah' => $this->post('jumlah')
 								);
 
 							switch($method)
@@ -1154,15 +1155,26 @@ class Admin extends REST_Controller {
 									}
 									else
 									{
+										$sha = generate_key();
 										$dataInsert = array(
 												'nama' => $postdata['nama'],
 												'gambar' => $postdata['gambar'],
 												'harga' => $postdata['harga'],
 												'kategori' => $postdata['kategori'],
-												'sha' => generate_key()
+												'sha' => $sha
 											);
 
 										$this->db->insert('m_menu' , $dataInsert);
+
+										$queryMenu = $this->db->get_where('m_menu' , array('sha' => $sha))->result()[0];
+
+										$dataStok = array(
+												'id_menu' => $queryMenu->id,
+												'date_add' => date('Y-m-d H:i:s'),
+												'jumlah' => 0
+											);
+
+										$this->db->insert('m_stok' , $dataStok);
 
 										$response = array(
 												'return' => true,
@@ -1295,6 +1307,51 @@ class Admin extends REST_Controller {
 													'error_message' => 'Sha tidak ditemukan!'
 												);
 										}
+									}
+								break;
+
+								case 'add_stok':
+									if ( ! $postdata['sha'] || ! $postdata['jumlah'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$sql = "SELECT m_menu.* , m_menu.id AS id_menu , m_stok.* , m_stok.id AS id_stok FROM 
+										m_menu , m_stok WHERE m_menu.id = m_stok.id_menu AND m_menu.sha = '".$postdata['sha']."'";
+
+										$query = $this->db->query($sql);
+
+										$num = $query->num_rows();
+
+										if ( $num > 0)
+										{
+											$stokSekarang = $query->result()[0]->jumlah;
+
+											$total = $stokSekarang + (int) $postdata['jumlah'];
+
+											$data = array(
+													'jumlah' => (int) $postdata['jumlah'],
+													'date_add' => date('Y-m-d H:i:s')
+												);
+
+											$this->db->set($data);
+											$this->db->where( array('id_menu' => $query->result()[0]->id_menu));
+											$this->db->update('m_stok');
+
+											$this->db->set( array('sha' => generate_key()));
+											$this->db->where( array('id' => $query->result()[0]->id_menu));
+											$this->db->update('m_menu');
+										}
+
+										$response = array(
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' => 
+												$num > 0 ? 'Stok telah ditambahkan!' : 'Menu tidak ditemukan!',
+											);
 									}
 								break;
 							}
@@ -1789,7 +1846,7 @@ class Admin extends REST_Controller {
 							{
 								case 'add_banner':
 									if ( ! $postdata['nama'] || ! $postdata['gambar']
-											|| ! $postdata['keterangan'] || ! $postdata['posisi'] 
+											|| ! $postdata['keterangan']
 											|| ! $postdata['link_banner'] || ! $postdata['added_by'])
 									{
 										$response = array(
@@ -1799,14 +1856,17 @@ class Admin extends REST_Controller {
 									}
 									else
 									{
+										$banner = $this->db->get_where('t_banner')->num_rows();
+
 										$query = $this->db->get_where('t_banner' , array(
 												'position' => $postdata['posisi'] , 'deleted' => 0 
 											));
 
 										$num = $query->num_rows();
 
+										$count = $banner + 1;
 										$dataInsert = array(
-												'position' => $postdata['posisi'],
+												'position' => (int) $count,
 												'nama' => $postdata['nama'],
 												'keterangan' => $postdata['keterangan'],
 												'gambar' => $postdata['gambar'],
@@ -1818,7 +1878,7 @@ class Admin extends REST_Controller {
 												'modified_datetime' => date('Y-m-d H:i:s')
  											);
 
-										if ( $num == 0 ) 
+										if ( $num == 0 )
 										{
 											$this->db->insert('t_banner' , $dataInsert);
 										}
@@ -1851,57 +1911,57 @@ class Admin extends REST_Controller {
 										if ( $num > 0 )
 										{
 											// $result == true ? continue : break;
-											$result = null;
+											// $result = null;
 
 											// cek posisi banner
-											if ( $postdata['posisi'])
-											{
-												$query = $this->db->get_where('t_banner' , array(
-														'position' => $postdata['posisi'] , 'deleted' => 0
-													));
+											// if ( $postdata['posisi'])
+											// {
+											// 	$query = $this->db->get_where('t_banner' , array(
+											// 			'position' => $postdata['posisi'] , 'deleted' => 0
+											// 		));
 
-												$posisi = $query->num_rows();
+											// 	$posisi = $query->num_rows();
 
-												// $posisi > 0 ? ada : tidak ada
-												$result = $posisi > 0 ? false : true;										
-											}
+											// 	// $posisi > 0 ? ada : tidak ada
+											// 	$result = $posisi > 0 ? false : true;										
+											// }
 
-											if ( $result )
-											{
-												$row = $selectBanner->result()[0];
+											// if ( $result )
+											// {
+											$row = $selectBanner->result()[0];
 
-												$data = array(
-													'position' => $postdata['posisi'] ? 
-														$postdata['posisi'] : $row->position,
-													'nama' => $postdata['nama'] ?
-														$postdata['nama'] : $row->nama,
-													'keterangan' => $postdata['keterangan'] ? 
-														$postdata['keterangan'] : $row->keterangan,
-													'gambar' => $postdata['gambar'] ?
-														$postdata['gambar'] : $row->gambar,
-													'link' => $postdata['link_banner'] ?
-														$postdata['link_banner'] : $row->link,
-													'sha' => generate_key(),
-													'modified_by' => $postdata['modified_by'],
-													'modified_datetime' => date('Y-m-d H:i:s')
+											$data = array(
+												'position' => $postdata['posisi'] ? 
+													$postdata['posisi'] : $row->position,
+												'nama' => $postdata['nama'] ?
+													$postdata['nama'] : $row->nama,
+												'keterangan' => $postdata['keterangan'] ? 
+													$postdata['keterangan'] : $row->keterangan,
+												'gambar' => $postdata['gambar'] ?
+													$postdata['gambar'] : $row->gambar,
+												'link' => $postdata['link_banner'] ?
+													$postdata['link_banner'] : $row->link,
+												'sha' => generate_key(),
+												'modified_by' => $postdata['modified_by'],
+												'modified_datetime' => date('Y-m-d H:i:s')
+											);
+
+											$this->db->set($data);
+											$this->db->where( array('sha' => $postdata['sha']));
+											$this->db->update('t_banner');
+
+											$response = array( 
+													'return' => true,
+													'message' => 'Berhasil mengubah banner!'
 												);
-
-												$this->db->set($data);
-												$this->db->where( array('sha' => $postdata['sha']));
-												$this->db->update('t_banner');
-
-												$response = array( 
-														'return' => true,
-														'message' => 'Berhasil mengubah banner!'
-													);
-											}
-											else
-											{
-												$response = array(
-														'return' => false,
-														'error_message' => "Posisi banner sudah ada!"
-													);
-											}
+											// }
+											// else
+											// {
+											// 	$response = array(
+											// 			'return' => false,
+											// 			'error_message' => "Posisi banner sudah ada!"
+											// 		);
+											// }
 										}
 										else
 										{
@@ -1932,12 +1992,13 @@ class Admin extends REST_Controller {
 
 										if ( $num > 0)
 										{
-											$dataUpdate = array(
-													'deleted' => 1
-												);
-											$this->db->set($dataUpdate);
-											$this->db->where( array('sha' => $query->result()[0]->sha));
-											$this->db->update('t_banner');
+											// $dataUpdate = array(
+											// 		'deleted' => 1
+											// 	);
+											// $this->db->set($dataUpdate);
+											// $this->db->where( array('sha' => $query->result()[0]->sha));
+											// $this->db->update('t_banner');
+											$this->db->delete('t_banner', array('sha' => $postdata['sha']));
 										}
 
 										$response = array(
