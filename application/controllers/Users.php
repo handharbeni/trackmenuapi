@@ -17,15 +17,7 @@ class Users extends REST_Controller {
 			$this->$x = $value;
 		}
 
-		$this->statusMessage = array(
-				1 => 'Pesanan baru',
-				2 => 'Pesanan sudah dterima oleh Admin',
-				3 => 'Pesanan akan diisi oleh Kurir',
-				4 => 'Pesanan diterima oleh Kurir',
-				5 => 'Pesanan sedang diantar oleh Kurir',
-				6 => 'Pesanan selesai',
-				7 => 'Pesanan telah dihapus'
-			);
+		$this->statusMessage = statusMessages();
 	}
 
 	public function index_get($action = '')
@@ -38,18 +30,76 @@ class Users extends REST_Controller {
 			switch( trimLower($action))
 			{
 				case 'menu':
-					$query = $this->db
-					->from('m_menu')
-					->where( array('deleted' => 0))
-					->order_by('id DESC')
-					->get();
+							if ( $this->get('sha'))
+							{
+								$query = $this->db
+								->from('m_menu')
+								->where( array('deleted' => 0 ,'sha' => $this->get('sha')))
+								->order_by('id DESC')
+								->get();
+							}
+							else
+							{
+								$query = $this->db
+								->from('m_menu')
+								->where( array('deleted' => 0))
+								->order_by('id DESC')
+								->get();
+							}
 
-					$response = array(
-							'return' => ($query->num_rows() > 0) ? true: false,
-							($query->num_rows() > 0) ? 'data' : 'error_message' => ($query->num_rows() > 0) 
-							? $query->result() : 'Data menu kosong'
-						);
-				break;
+							$data = null;
+
+							foreach($query->result() as $row)
+							{
+								$queryStokAvailable = $this->db->get_where('m_stok' , array('id_menu' => $row->id));
+								$queryStokUsed = $this->db->get_where('t_pemakaian_stok' , array('id_menu' => $row->id));
+
+								$numStokAvailable = $queryStokAvailable->num_rows();
+								$numStokUsed = $queryStokUsed->num_rows();
+
+								if ( $numStokUsed > 0)
+								{
+									$stokUsed = null;
+
+									foreach($queryStokUsed->result() as $x)
+									{
+										$stokUsed += $x->jumlah;
+									}
+								}
+
+								if ( $numStokAvailable > 0)
+								{
+									$stokAvailable = null;
+
+									foreach($queryStokAvailable->result() as $y)
+									{
+										$stokAvailable += $y->jumlah;
+									}
+								}
+
+								$total = ($numStokAvailable > 0 ? $stokAvailable : 0) - ($numStokUsed > 0 ? $stokUsed : 0);
+
+								$data[] = array(
+										'id' => $row->id,
+										'nama' => $row->nama,
+										'gambar' => $row->gambar,
+										'harga' => $row->harga,
+										'kategori' => $row->kategori,
+										'sha' => $row->sha,
+										'stok' => array(
+												'jumlah' => $numStokAvailable > 0 ? $stokAvailable : 0,
+												'digunakan' => $numStokUsed > 0 ? $stokUsed : 0,
+												'sisa' => (int) $total,
+											)
+									);
+							}
+
+							$response = array(
+									'return' => ($query->num_rows() > 0) ? true: false,
+									($query->num_rows() > 0) ? 'data' : 'error_message' => ($query->num_rows() > 0) 
+									? $data : 'Data menu kosong'
+								);
+						break;
 				
 				case 'order':
 					if ( $token)
@@ -848,7 +898,8 @@ class Users extends REST_Controller {
 							'longitude' => $this->post('longitude'),
 							'delivery_fee' => $this->post('delivery_fee'),
 							'keterangan' => $this->post('keterangan'),
-							'id_outlet' => $this->post('id_outlet')
+							'id_outlet' => $this->post('id_outlet'),
+							'sha' => $this->post('sha')
 						);
 
 						$this->isNullField = array(
@@ -910,6 +961,30 @@ class Users extends REST_Controller {
 														'message' => 'Item Order Gagal Ditambahkan!'
 													);
 											}
+
+											/* Update stok */
+											$dataStok = array(
+													'id_order' => $postdata['id_order'],
+													'id_menu' => $postdata['id_menu'],
+													'jumlah' => $postdata['jumlah'],
+													'date_add' => date('Y-m-d H:i:s')
+												);
+											$insertToStok = $this->db->insert('t_pemakaian_stok' , $dataStok);
+
+											if ( $insertToStok)
+											{
+												$response = array(
+														'return' => true,
+														'error_message' => 'Berhasil mengupdate stok!'
+													);
+											}
+											else
+											{
+												$response = array(
+														'return' => false,
+														'error_message' => 'Gagal mengupdate stok!'
+													);
+											}
 										}else{
 											/*data master tidak ditemukan*/
 											$response = array(
@@ -960,36 +1035,35 @@ class Users extends REST_Controller {
 								break;
 
 								case 'done':
-									if ( ! $postdata['id_order'])
+									if ( ! $postdata['sha'])
 									{
-										$respose = $this->isNullField;
+										$response = array(
+											'return' => false,
+											'error_message' => $this->msgNullField
+										);
 									}
 									else
 									{
-										$data = array(
-												'status' => 5,
-												'sha' => generate_key()
-											);
+										$query = $this->db->get_where('m_order', array('sha' => $postdata['sha']));
 
-										$checknum = $this->db->get_where('m_order' , array(
-												'id' => $postdata['id_order']
-											));
-
-										$num = $checknum->num_rows();
+										$num = $query->num_rows();
 
 										if ( $num > 0)
 										{
+											$data = array(
+													'status' => 6,
+													'sha' => generate_key()
+												);
+
 											$this->db->set($data);
-											$this->db->where( 
-												array('id' => $postdata['id_order'], 'id_user' => $user['id']));
+											$this->db->where( array('sha' => $postdata['sha']));
 											$this->db->update('m_order');
 										}
 
 										$response = array(
-												'return' => ($num > 0) ? true : false,
-												($num > 0) ? 'message' : 'error_message' => 
-												($num > 0) ? 'Status order berhasil diubah!'
-												: 'ID Order tidak ditemukan!'
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' =>
+												$num > 0 ? 'Order selesai' : 'Order tidak ditemukan!'
 											);
 									}
 								break;

@@ -2,37 +2,37 @@
 
 ## [User]
 
-### GET User Detail
+### GET User Detail [OK]
 /users/?token={access_token}
 
-### GET Menu
+### GET Menu [OK]
 /users/menu
 
-### GET Order
+### GET Order [OK]
 /users/order?token={access_token}
 
-### GET Location Kurir
+### GET Location Kurir [OK]
 /users/tracking?kurir_id={id_kurir}
 
-### GET Rating
+### GET Rating [OK]
 /users/rating?opsi={opsi}
 
-### GET Search Order by ID
+### GET Search Order by ID [OK]
 /users/search?id_order={id_order}
 
-### POST Login
+### POST Login [OK]
 => email
 => password
 /users/login
 
-### POST Daftar
+### POST Daftar [OK]
 => nama
 => email
 => no_hp
 => password
 /users/daftar
 
-### POST Add Item 
+### POST Add Item  [OK]
 => token
 => method (add_item)
 => id_order (optional)
@@ -41,7 +41,7 @@
 => keterangan (optional)
 /users/order
 
-### POST Add Order 
+### POST Add Order [OK]
 => token
 => method (new_order)
 => id_order (optional)
@@ -53,13 +53,13 @@
 => keterangan (optional)
 /users/order
 
-### POST Order Done 
+### POST Order Done [OK]
 => token
 => method (done)
-=> id_order
+=> sha
 /users/order
 
-### POST Profile 
+### POST Profile [OK]
 => token
 => nama
 => lokasi
@@ -105,9 +105,16 @@
 => password
 /kurir/login
 
+### POST Get Order [OK]
+=> token
+=> method (get_order)
+=> sha
+/kurir/order
+
 ### POST Order Active [OK]
 => token
-=> id_order
+=> method (order_active)
+=> sha
 /kurir/order
 
 ## [Admin]
@@ -138,51 +145,52 @@
 => pasword
 /admin/login
 
-### POST accept order !k
+### POST accept order [OK]
 => token
 => method (accept_order)
-=> id_order
-/admin/kurir
+=> sha
+/admin/order
 
 ### POST order ke kurir [OK]
 => token
 => method (send_order)
-=> id_order
-=> id_kurir
-/admin/kurir
+=> sha
+/admin/order
 
-### POST cancel order ke kurir !k
+### POST cancel order ke kurir [OK]
 => token
 => method (cancel_order)
-=> id_order
-/admin/kurir
+=> sha
+/admin/order
 
-### POST delete order !k
+### POST delete order [OK]
 => token
-=> method (delete_order)
-=> id_order
-/admin/kurir [!k]
+=> method (temp_delete)
+=> sha
+/admin/order
 
 ### POST Menu [OK]
 => token
 
-=> method (add)
+=> method (add) [OK]
 => nama
 => gambar
 => harga
 => kategori
 
-=> method (update)
-=> token
+=> method (update) [OK]
 => sha
 => nama (optional)
 => gambar (optional)
 => harga (optional)
 => kategori (optional)
 
-=> method (delete)
-=> token
+=> method (delete) [OK]
 => sha
+
+=> method (add_stok) [OK]
+=> id_menu
+=> jumlah
 
 /admin/menu
 
@@ -197,10 +205,17 @@
 => no_hp
 => no_plat
 
-=> method (delete_kurir)
+=> method (delete_kurir) [OK]
 => token_kurir
 
-=> method (update_kurir) !k
+=> method (update_kurir) [OK]
+=> token_kurir
+=> nama (optional)
+=> username (optional)
+=> password (optional)
+=> foto (optional)
+=> no_hp (optional)
+=> no_plat (optional)
 
 /admin/kurir
 
@@ -248,18 +263,42 @@
 => password (optional)
 /admin/profile
 
-### POST Banner !k
+### POST Banner [OK]
 => token
-=> method (add_banner) !k
 
-=> method (delete_banner) !k
+=> method (add_banner) [OK]
+=> nama
+=> gambar
+=> keterangan
+=> posisi
+=> link_banner
+=> added_by
 
-=> method (update_banner) !k
+=> method (delete_banner) [OK]
+=> sha
+
+=> method (update_banner) [OK]
+=> sha
+=> modified_by
+/admin/banner
 
 ### POST Setting [OK]
 => token
 => km
 /admin/setting
+
+### POST Stok !k
+=> token
+
+=> method (add_stok)
+=> sha
+=> jumlah
+/admin/menu
+
+=> method (update_stok)
+=> sha
+=> jumlah
+/admin/menu
 
 [Outlet]
 ### GET Outlet detail
@@ -314,6 +353,9 @@
 
 ### GET Banner [OK]
 /public/feature?type=banner&access=true
+
+### GET Banner Detail
+/public/feature?type=banner&sha={sha}&access=true
 
 ### GET Outlet [OK]
 /public/list?type=outlet&access=true

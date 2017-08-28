@@ -17,15 +17,7 @@ class Admin extends REST_Controller {
 			$this->$x = $value;
 		}
 
-		$this->statusMessage = array(
-				1 => 'Pesanan baru',
-				2 => 'Pesanan sudah dterima oleh Admin',
-				3 => 'Pesanan akan diisi oleh Kurir',
-				4 => 'Pesanan diterima oleh Kurir',
-				5 => 'Pesanan sedang diantar oleh Kurir',
-				6 => 'Pesanan selesai',
-				7 => 'Pesanan telah dihapus'
-			);
+		$this->statusMessage = statusMessages();
 	}
 
 	public function index_get($action = '')
@@ -59,10 +51,57 @@ class Admin extends REST_Controller {
 								->get();
 							}
 
+							$data = null;
+
+							foreach($query->result() as $row)
+							{
+								$queryStokAvailable = $this->db->get_where('m_stok' , array('id_menu' => $row->id));
+								$queryStokUsed = $this->db->get_where('t_pemakaian_stok' , array('id_menu' => $row->id));
+
+								$numStokAvailable = $queryStokAvailable->num_rows();
+								$numStokUsed = $queryStokUsed->num_rows();
+
+								if ( $numStokUsed > 0)
+								{
+									$stokUsed = null;
+
+									foreach($queryStokUsed->result() as $x)
+									{
+										$stokUsed += $x->jumlah;
+									}
+								}
+
+								if ( $numStokAvailable > 0)
+								{
+									$stokAvailable = null;
+
+									foreach($queryStokAvailable->result() as $y)
+									{
+										$stokAvailable += $y->jumlah;
+									}
+								}
+
+								$total = ($numStokAvailable > 0 ? $stokAvailable : 0) - ($numStokUsed > 0 ? $stokUsed : 0);
+
+								$data[] = array(
+										'id' => $row->id,
+										'nama' => $row->nama,
+										'gambar' => $row->gambar,
+										'harga' => $row->harga,
+										'kategori' => $row->kategori,
+										'sha' => $row->sha,
+										'stok' => array(
+												'jumlah' => $numStokAvailable > 0 ? $stokAvailable : 0,
+												'digunakan' => $numStokUsed > 0 ? $stokUsed : 0,
+												'sisa' => (int) $total,
+											)
+									);
+							}
+
 							$response = array(
 									'return' => ($query->num_rows() > 0) ? true: false,
 									($query->num_rows() > 0) ? 'data' : 'error_message' => ($query->num_rows() > 0) 
-									? $query->result() : 'Data menu kosong'
+									? $data : 'Data menu kosong'
 								);
 						break;
 
@@ -419,6 +458,250 @@ class Admin extends REST_Controller {
 				}
 			break;
 
+			case 'order':
+				if ( ! $token)
+				{
+					$response = array(
+							'return' => false,
+							'error_message' => $this->msgErrorToken
+						);
+				}
+				else
+				{
+					if ( ! $authToken)
+					{
+						$response = array(
+								'return' => false,
+								'error_message' => $this->msgWrongToken
+							);
+					}
+					else
+					{
+						$postdata = array(
+								'method' => $this->post('method'),
+								'sha' => $this->post('sha')
+							);
+
+						if ( ! $postdata['method'])
+						{
+							$response = array(
+									'return' => false,
+									'error_message' => $this->msgNullField
+								);
+						}
+						else
+						{
+							switch( trimLower($postdata['method']))
+							{
+								case 'accept_order':
+									if ( ! $postdata['sha'])
+									{
+										$response = array(
+											'return' => false,
+											'error_message' => $this->msgNullField
+										);
+									}
+									else
+									{
+										$query = $this->db->get_where('m_order', array('sha' => $postdata['sha']));
+
+										$num = $query->num_rows();
+
+										if ( $num > 0)
+										{
+											$data = array(
+													'status' => 2,
+													'sha' => generate_key()
+												);
+
+											$this->db->set($data);
+											$this->db->where( array('sha' => $postdata['sha']));
+											$this->db->update('m_order');
+										}
+
+										$response = array(
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' =>
+												$num > 0 ? 'Order behasil diterima' : 'Order tidak ditemukan!'
+											);
+									}
+								break;
+
+								case 'send_order':
+									if ( ! $postdata['sha'])
+									{
+										$response = array(
+											'return' => false,
+											'error_message' => $this->msgNullField
+										);
+									}
+									else
+									{
+										$query = $this->db->get_where('m_order', array('sha' => $postdata['sha']));
+
+										$num = $query->num_rows();
+
+										if ( $num > 0)
+										{
+											$data = array(
+													'status' => 3,
+													'sha' => generate_key()
+												);
+
+											$this->db->set($data);
+											$this->db->where( array('sha' => $postdata['sha']));
+											$this->db->update('m_order');
+										}
+
+										$response = array(
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' =>
+												$num > 0 ? 'Order berhasil dikirim' : 'Order tidak ditemukan!'
+											);
+									}
+								break;
+
+								case 'cancel_order':
+									if ( ! $postdata['sha'])
+									{
+										$response = array(
+											'return' => false,
+											'error_message' => $this->msgNullField
+										);
+									}
+									else
+									{
+										$query = $this->db->get_where('m_order', array('sha' => $postdata['sha']));
+
+										$num = $query->num_rows();
+
+										if ( $num > 0)
+										{
+											$data = array(
+													'status' => 6,
+													'sha' => generate_key()
+												);
+
+											$this->db->set($data);
+											$this->db->where( array('sha' => $postdata['sha']));
+											$this->db->update('m_order');
+										}
+
+										$response = array(
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' =>
+												$num > 0 ? 'Order berhasil dibatalkan' : 'Order tidak ditemukan!'
+											);
+									}
+								break;
+
+								case 'temp_delete':
+									if ( ! $postdata['sha'])
+									{
+										$response = array(
+											'return' => false,
+											'error_message' => $this->msgNullField
+										);
+									}
+									else
+									{
+										$query = $this->db->get_where('m_order', array('sha' => $postdata['sha']));
+
+										$num = $query->num_rows();
+
+										if ( $num > 0)
+										{
+											$data = array(
+													'status' => 7,
+													'sha' => generate_key()
+												);
+
+											$this->db->set($data);
+											$this->db->where( array('sha' => $postdata['sha']));
+											$this->db->update('m_order');
+										}
+
+										$response = array(
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' =>
+												$num > 0 ? 'Order berhasil dihapus' : 'Order tidak ditemukan!'
+											);
+									}
+								break;
+
+								case 'undo':
+									if ( ! $postdata['sha'])
+									{
+										$response = array(
+											'return' => false,
+											'error_message' => $this->msgNullField
+										);
+									}
+									else
+									{
+										$query = $this->db->get_where('m_order', array('sha' => $postdata['sha']));
+
+										$num = $query->num_rows();
+
+										if ( $num > 0)
+										{
+											$data = array(
+													'status' => 6,
+													'sha' => generate_key()
+												);
+
+											$this->db->set($data);
+											$this->db->where( array('sha' => $postdata['sha']));
+											$this->db->update('m_order');
+										}
+
+										$response = array(
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' =>
+												$num > 0 ? 'Order berhasil dihapus' : 'Order tidak ditemukan!'
+											);
+									}
+								break;
+
+								// case 'perm_delete':
+								// 	if ( ! $postdata['sha'])
+								// 	{
+								// 		$response = array(
+								// 			'return' => false,
+								// 			'error_message' => $this->msgNullField
+								// 		);
+								// 	}
+								// 	else
+								// 	{
+								// 		$query = $this->db->get_where('m_order', array('sha' => $postdata['sha']));
+
+								// 		$num = $query->num_rows();
+
+								// 		if ( $num > 0)
+								// 		{
+								// 			$this->db->delete('m_order', array('sha' => $postdata['sha']));
+								// 		}
+
+								// 		$response = array(
+								// 				'return' => $num > 0 ? true : false,
+								// 				$num > 0 ? 'message' : 'error_message' =>
+								// 				$num > 0 ? 'Order berhasil dihapus permanen' : 'Order tidak ditemukan!'
+								// 			);
+								// 	}
+								// break;
+
+								default:
+									$response = array(
+											'return' => false,
+											'error_message' => $this->msgWrongMethod
+										);
+								break;
+							}
+						}
+					}
+				}
+			break;
+
 			case 'kurir':
 				if ( ! $token)
 				{
@@ -513,7 +796,7 @@ class Admin extends REST_Controller {
 								break;
 
 								case 'delete_kurir':
-									if ( ! $postdata['id_kurir'])
+									if ( ! $this->post('token_kurir'))
 									{
 										$response = array(
 												'return' => false,
@@ -522,47 +805,107 @@ class Admin extends REST_Controller {
 									}
 									else
 									{
-										$this->db->delete('m_kurir' , array('id' => $postdata['id_kurir']));
+										$data = authToken('kurir', $this->post('token_kurir'));
 
-										$response = array(
-												'return' => true,
-												'message' => 'Berhasil menghapus kurir!'
-											);
+										if ( ! $data)
+										{
+											$response = array(
+													'return' => false,
+													'error_message' => $this->msgWrongToken
+												);
+										}
+										else
+										{
+											$this->db->set( array('deleted' => 1));
+											$this->db->where( array('key' => $data['token']));
+											$this->db->update('m_kurir');
+
+											$response = array(
+													'return' => true,
+													'message' => 'Berhasil menghapus kurir!'
+												);
+										}
 									}
 								break;
 
-								case 'send_order':
-									if ( ! $postdata['id_order'] || ! $postdata['id_kurir'])
+								case 'undo':
+									if ( ! $this->post('token_kurir'))
 									{
 										$response = array(
-											'return' => false,
-											'error_message' => $this->msgNullField
-										);
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
 									}
 									else
 									{
-										$dataUpdate = array(
-												'id_kurir' => $postdata['id_kurir'],
-												'status' => 3,
-												'sha' => generate_key()
-											);
+										$data = authToken('kurir', $this->post('token_kurir'));
 
-										$this->db->set($dataUpdate);
-										$this->db->where( 
-											array('id' => $postdata['id_order']));
-										$this->db->update('m_order');
+										if ( ! $data)
+										{
+											$response = array(
+													'return' => false,
+													'error_message' => $this->msgWrongToken
+												);
+										}
+										else
+										{
+											$this->db->set( array('deleted' => 0));
+											$this->db->where( array('key' => $data['token']));
+											$this->db->update('m_kurir');
+											
+											$response = array(
+													'return' => true,
+													'message' => 'Berhasil membatalkan!'
+												);
+										}
+									}
+								break;
 
-										$query = $this->db->get_where('m_order' , array(
-												'id' => $postdata['id_order']
-											));
-
-										$row = $query->num_rows();
-
+								case 'update_kurir':
+									if ( ! $this->post('token_kurir'))
+									{
 										$response = array(
-												'return' => ( $row > 0) ? true : false,
-												 ( $row > 0) ? 'data' : 'error_message' 
-												 =>  ( $row > 0) ? $query->result()[0] : 'ID Order tidak ditemukan!'
+												'return' => false,
+												'error_message' => $this->msgNullField
 											);
+									}
+									else
+									{
+										$data = authToken('kurir', $this->post('token_kurir'), TRUE);
+
+										if ( ! $data)
+										{
+											$response = array(
+													'return' => false,
+													'error_message' => $this->msgWrongToken
+												);
+										}
+										else
+										{
+											$dataUpdate = array(
+													'nama' => $postdata['nama'] ?
+														$postdata['nama'] : $data['nama'],
+													'username' => $postdata['username'] ?
+														$postdata['username'] : $data['username'],
+													'password' => $postdata['password'] ?
+														$postdata['password'] : $data['password'],
+													'foto_profil' => $postdata['foto'] ?
+														$postdata['foto'] : $data['foto_profil'],
+													'no_hp' => $postdata['no_hp'] ? 
+														$postdata['no_hp'] : $data['no_hp'],
+													'no_plat' => $postdata['no_plat'] ?
+														$postdata['no_plat'] : $data['no_plat']
+												);
+
+											$this->db->set($dataUpdate);
+											$this->db->where( array('key' => $data['token']));
+											$this->db->update('m_kurir');
+
+											$response = array(
+													'return' => true,
+													'message' => 'Berhasil mengubah data kurir!'
+												);
+										}
 									}
 								break;
 
@@ -597,7 +940,7 @@ class Admin extends REST_Controller {
 					}
 					else
 					{
-						$listMethod = array('add','update','delete','undo');
+						$listMethod = array('add','update','delete','undo','add_stok','update_stok');
 						$method = $this->post('method');
 
 						if ( ! in_array( trimLower($method) , $listMethod))
@@ -615,7 +958,8 @@ class Admin extends REST_Controller {
 									'gambar' => $this->post('gambar'),
 									'harga' => $this->post('harga'),
 									'kategori' => $this->post('kategori'),
-									'sha' => $this->post('sha')
+									'sha' => $this->post('sha'),
+									'jumlah' => $this->post('jumlah')
 								);
 
 							switch($method)
@@ -811,15 +1155,26 @@ class Admin extends REST_Controller {
 									}
 									else
 									{
+										$sha = generate_key();
 										$dataInsert = array(
 												'nama' => $postdata['nama'],
 												'gambar' => $postdata['gambar'],
 												'harga' => $postdata['harga'],
 												'kategori' => $postdata['kategori'],
-												'sha' => generate_key()
+												'sha' => $sha
 											);
 
 										$this->db->insert('m_menu' , $dataInsert);
+
+										$queryMenu = $this->db->get_where('m_menu' , array('sha' => $sha))->result()[0];
+
+										$dataStok = array(
+												'id_menu' => $queryMenu->id,
+												'date_add' => date('Y-m-d H:i:s'),
+												'jumlah' => 0
+											);
+
+										$this->db->insert('m_stok' , $dataStok);
 
 										$response = array(
 												'return' => true,
@@ -952,6 +1307,51 @@ class Admin extends REST_Controller {
 													'error_message' => 'Sha tidak ditemukan!'
 												);
 										}
+									}
+								break;
+
+								case 'add_stok':
+									if ( ! $postdata['sha'] || ! $postdata['jumlah'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$sql = "SELECT m_menu.* , m_menu.id AS id_menu , m_stok.* , m_stok.id AS id_stok FROM 
+										m_menu , m_stok WHERE m_menu.id = m_stok.id_menu AND m_menu.sha = '".$postdata['sha']."'";
+
+										$query = $this->db->query($sql);
+
+										$num = $query->num_rows();
+
+										if ( $num > 0)
+										{
+											$stokSekarang = $query->result()[0]->jumlah;
+
+											$total = $stokSekarang + (int) $postdata['jumlah'];
+
+											$data = array(
+													'jumlah' => (int) $postdata['jumlah'],
+													'date_add' => date('Y-m-d H:i:s')
+												);
+
+											$this->db->set($data);
+											$this->db->where( array('id_menu' => $query->result()[0]->id_menu));
+											$this->db->update('m_stok');
+
+											$this->db->set( array('sha' => generate_key()));
+											$this->db->where( array('id' => $query->result()[0]->id_menu));
+											$this->db->update('m_menu');
+										}
+
+										$response = array(
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' => 
+												$num > 0 ? 'Stok telah ditambahkan!' : 'Menu tidak ditemukan!',
+											);
 									}
 								break;
 							}
@@ -1396,6 +1796,259 @@ class Admin extends REST_Controller {
 										'return' => false,
 										'error_message' => $this->msgWrongMethod
 									);
+								break;
+							}
+						}
+					}
+				}
+			break;
+
+			case 'banner':
+				if ( ! $token)
+				{
+					$response = array(
+							'return' => false,
+							'error_message' => $this->msgErrorToken
+						);
+				}
+				else
+				{
+					if ( ! $authToken)
+					{
+						$response = array(
+								'return' => false,
+								'error_message' => $this->msgWrongToken
+							);
+					}
+					else
+					{
+						$postdata = array(
+								'method' => $this->post('method'),
+								'nama' => $this->post('nama'),
+								'gambar' => $this->post('gambar'),
+								'keterangan' => $this->post('keterangan'),
+								'posisi' => $this->post('posisi'),
+								'link_banner' => $this->post('link_banner'),
+								'added_by' => $this->post('added_by'),
+								'modified_by' => $this->post('modified_by'),
+								'sha' => $this->post('sha')
+							);
+						if ( ! $postdata['method'])
+						{
+							$response = array(
+									'return' => false,
+									'error_message' => $this->msgNullField
+								);
+						}
+						else
+						{
+							switch($postdata['method'])
+							{
+								case 'add_banner':
+									if ( ! $postdata['nama'] || ! $postdata['gambar']
+											|| ! $postdata['keterangan']
+											|| ! $postdata['link_banner'] || ! $postdata['added_by'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$banner = $this->db->get_where('t_banner')->num_rows();
+
+										$query = $this->db->get_where('t_banner' , array(
+												'position' => $postdata['posisi'] , 'deleted' => 0 
+											));
+
+										$num = $query->num_rows();
+
+										$count = $banner + 1;
+										$dataInsert = array(
+												'position' => (int) $count,
+												'nama' => $postdata['nama'],
+												'keterangan' => $postdata['keterangan'],
+												'gambar' => $postdata['gambar'],
+												'link' => $postdata['link_banner'],
+												'sha' => generate_key(),
+												'added_by' => $postdata['added_by'],
+												'added_datetime' => date('Y-m-d H:i:s'),
+												'modified_by' => 'nothing',
+												'modified_datetime' => date('Y-m-d H:i:s')
+ 											);
+
+										if ( $num == 0 )
+										{
+											$this->db->insert('t_banner' , $dataInsert);
+										}
+
+										$response = array(
+												'return' => $num == 0 ? true : false,
+												$num == 0 ? 'message' : 'error_message' =>
+												$num == 0 ? 'Berhasil menginput data banner!' : 
+													($num > 0 ? 'Posisi banner sudah ada' : 'Gagal menginput data banner')
+											);
+									}
+								break;
+
+								case 'update_banner':
+									if ( ! $postdata['sha'] || ! $postdata['modified_by'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$selectBanner = $this->db->get_where('t_banner' , array(
+												'sha' => $postdata['sha']
+											));
+
+										$num = $selectBanner->num_rows();
+
+										if ( $num > 0 )
+										{
+											// $result == true ? continue : break;
+											// $result = null;
+
+											// cek posisi banner
+											// if ( $postdata['posisi'])
+											// {
+											// 	$query = $this->db->get_where('t_banner' , array(
+											// 			'position' => $postdata['posisi'] , 'deleted' => 0
+											// 		));
+
+											// 	$posisi = $query->num_rows();
+
+											// 	// $posisi > 0 ? ada : tidak ada
+											// 	$result = $posisi > 0 ? false : true;										
+											// }
+
+											// if ( $result )
+											// {
+											$row = $selectBanner->result()[0];
+
+											$data = array(
+												'position' => $postdata['posisi'] ? 
+													$postdata['posisi'] : $row->position,
+												'nama' => $postdata['nama'] ?
+													$postdata['nama'] : $row->nama,
+												'keterangan' => $postdata['keterangan'] ? 
+													$postdata['keterangan'] : $row->keterangan,
+												'gambar' => $postdata['gambar'] ?
+													$postdata['gambar'] : $row->gambar,
+												'link' => $postdata['link_banner'] ?
+													$postdata['link_banner'] : $row->link,
+												'sha' => generate_key(),
+												'modified_by' => $postdata['modified_by'],
+												'modified_datetime' => date('Y-m-d H:i:s')
+											);
+
+											$this->db->set($data);
+											$this->db->where( array('sha' => $postdata['sha']));
+											$this->db->update('t_banner');
+
+											$response = array( 
+													'return' => true,
+													'message' => 'Berhasil mengubah banner!'
+												);
+											// }
+											// else
+											// {
+											// 	$response = array(
+											// 			'return' => false,
+											// 			'error_message' => "Posisi banner sudah ada!"
+											// 		);
+											// }
+										}
+										else
+										{
+											$response = array(
+													'return' => false,
+													'error_message' => "SHA Tidak ditemukan"
+												);
+										}
+									}
+								break;
+
+								case 'delete_banner':
+									if ( ! $postdata['sha'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$query = $this->db->get_where('t_banner' , array(
+												'sha' => $postdata['sha']
+											));
+
+										// > 0 ? ada : gada
+										$num = $query->num_rows();
+
+										if ( $num > 0)
+										{
+											// $dataUpdate = array(
+											// 		'deleted' => 1
+											// 	);
+											// $this->db->set($dataUpdate);
+											// $this->db->where( array('sha' => $query->result()[0]->sha));
+											// $this->db->update('t_banner');
+											$this->db->delete('t_banner', array('sha' => $postdata['sha']));
+										}
+
+										$response = array(
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' =>
+												$num > 0 ? 'Berhasil mengapus banner!' : 'SHA tidak ditemukan!'
+											);
+									}
+								break;
+
+								case 'undo':
+									if ( ! $postdata['sha'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$query = $this->db->get_where('t_banner' , array(
+												'sha' => $postdata['sha']
+											));
+
+										// > 0 ? ada : gada
+										$num = $query->num_rows();
+
+										if ( $num > 0)
+										{
+											$dataUpdate = array(
+													'deleted' => 0
+												);
+											$this->db->set($dataUpdate);
+											$this->db->where( array('sha' => $query->result()[0]->sha));
+											$this->db->update('t_banner');
+										}
+
+										$response = array(
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' =>
+												$num > 0 ? 'Berhasil membatalkan!' : 'SHA tidak ditemukan!'
+											);
+									}
+								break;
+
+								default:
+									$response = array(
+											'return' => false,
+											'error_message' => $this->msgWrongMethod
+										);
 								break;
 							}
 						}

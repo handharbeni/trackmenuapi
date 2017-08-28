@@ -17,15 +17,7 @@ class Kurir extends REST_Controller {
 			$this->$x = $value;
 		}
 
-		$this->statusMessage = array(
-				1 => 'Pesanan baru',
-				2 => 'Pesanan sudah dterima oleh Admin',
-				3 => 'Pesanan akan diisi oleh Kurir',
-				4 => 'Pesanan diterima oleh Kurir',
-				5 => 'Pesanan sedang diantar oleh Kurir',
-				6 => 'Pesanan selesai',
-				7 => 'Pesanan telah dihapus'
-			);
+		$this->statusMessage = statusMessages();
 	}
 
 	public function index_get($action = '')
@@ -301,53 +293,98 @@ class Kurir extends REST_Controller {
 					else
 					{
 						$kurir = $authToken;
-						if ( ! $this->post('id_order'))
+						$postdata = array(
+								'method' => $this->post('method'),
+								'sha' => $this->post('sha')
+							);
+
+						if ( ! $postdata['method'])
 						{
 							$response = array(
 									'return' => false,
-									'error_message' => $this->msgNullField,
+									'error_message' => $this->msgNullField
 								);
 						}
 						else
 						{
-							$allorder = $this->db
-							->where( array('id' => $this->post('id_order')))
-							->get('m_order');
-
-							if ( $allorder->num_rows() == 0)
+							switch( trimLower($postdata['method']))
 							{
-								$response = array(
-										'return' => false,
-										'error_message' => 'Data order tidak ditemukan!'
-									);
-							}
-							else
-							{
-								$rs = $allorder->result();
+								case 'get_order':
+									if ( ! $postdata['sha'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$query = $this->db->get_where('m_order', array('sha' => $postdata['sha']));
 
-								$rsAuth = $rs[0]->id_kurir != 0;
-								
-								$data = array(
-										'id_kurir' => $kurir['id'],
-										'status' => 4,
-										'sha' => generate_key()
-									);
+										$num = $query->num_rows();
 
-								$this->db->set($data);
-								$this->db->where( array('id' => $this->post('id_order')));
-								$this->db->update('m_order');
+										if ( $num > 0)
+										{
+											$data = array(
+													'id_kurir' => $kurir['id'],
+													'status' => 4,
+													'sha' => generate_key()
+												);
 
-								$myorder = $this->db->get_where('m_order' , array(
-										'id_kurir' => $kurir['id'],
-										'status' => 4
-									))->result();
+											$this->db->set($data);
+											$this->db->where( array('sha' => $postdata['sha']));
+											$this->db->update('m_order');
+										}
 
+										$response = array(
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' =>
+												$num > 0 ? 'Order behasil diambil' : 'Order tidak ditemukan!'
+											);
+									}
+								break;
 
-								$response = array(
-										'return' => true,
-										'message' => $rsAuth ? 'Sudah ada yang mengambil orderan!' : 'Berhasil mengambil orderan!',
-										'orders' => $rsAuth ? null : $myorder
-									);
+								case 'order_active':
+									if ( ! $postdata['sha'])
+									{
+										$response = array(
+												'return' => false,
+												'error_message' => $this->msgNullField
+											);
+									}
+									else
+									{
+										$query = $this->db->get_where('m_order', array('sha' => $postdata['sha']));
+
+										$num = $query->num_rows();
+
+										if ( $num > 0)
+										{
+											$data = array(
+													'id_kurir' => $kurir['id'],
+													'status' => 5,
+													'sha' => generate_key()
+												);
+
+											$this->db->set($data);
+											$this->db->where( array('sha' => $postdata['sha']));
+											$this->db->update('m_order');
+										}
+
+										$response = array(
+												'return' => $num > 0 ? true : false,
+												$num > 0 ? 'message' : 'error_message' =>
+												$num > 0 ? 'Order berhasil diambil & akan diantar ' : 'Order tidak ditemukan!'
+											);
+									}
+								break;
+
+								default:
+									$response = array(
+											'return' => false,
+											'error_message' => $this->msgWrongMethod
+										);
+								break;
 							}
 						}
 					}

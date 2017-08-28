@@ -233,7 +233,23 @@ if ( ! function_exists('authToken'))
 
 					foreach($query->result() as $row)
 					{
-						$data[] = array(
+						if ( $viewpwd)
+						{
+							$data[] = array(
+								'id' => $row->id,
+								'nama' => $row->nama,
+								'username' => $row->username,
+								'password' => $row->password,
+								'foto_profil' => $row->foto_profil,
+								'no_hp' => $row->no_hp,
+								'no_plat' => $row->no_plat,
+								'token' => $row->key,
+								'tanggal' => $row->tanggal,
+							);
+						}
+						else
+						{
+							$data[] = array(
 								'id' => $row->id,
 								'nama' => $row->nama,
 								'username' => $row->username,
@@ -243,6 +259,7 @@ if ( ! function_exists('authToken'))
 								'token' => $row->key,
 								'tanggal' => $row->tanggal,
 							);
+						}
 					}
 
 					return $data[0];	
@@ -350,4 +367,20 @@ if(!function_exists('checkMime'))
             return 'application/octet-stream';
         }
     }
+}
+
+if ( ! function_exists('statusMessages'))
+{
+	function statusMessages()
+	{
+		return array(
+				1 => 'Pesanan baru', // user
+				2 => 'Pesanan sudah dterima oleh Admin', // admin / oulet
+				3 => 'Pesanan akan diambil oleh Kurir', // kurir
+				4 => 'Pesanan diterima oleh Kurir', // kurir
+				5 => 'Pesanan sedang diantar oleh Kurir', // kurir
+				6 => 'Pesanan selesai', // selesai
+				7 => 'Pesanan telah dihapus' // user / admin
+			);
+	}
 }
